@@ -1,0 +1,27 @@
+{
+  "name": "lastfm-lab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A TypeScript playground for the Last.fm API",
+  "type": "module",
+  "packageManager": "pnpm@12.16.1",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "artist": "node examples/artist.ts",
+    "track": "node examples/track.ts",
+    "user": "node examples/user.ts",
+    "chart": "node examples/chart.ts",
+    "search": "node examples/search.ts",
+    "raw": "node examples/raw.ts",
+    "auth": "node examples/auth.ts",
+    "play": "node examples/playground.ts",
+    "play:watch": "node --watch examples/playground.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
