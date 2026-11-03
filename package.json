@@ -7,9 +7,11 @@
   "packageManager": "pnpm@12.16.1",
   "imports": {
     "#app/*": "./app/*",
+    "#cli/*": "./cli/*",
     "#config": "./app/config.ts",
     "#components/*": "./app/components/*",
     "#services/*": "./app/services/*",
+    "#shared/*": "./shared/*",
     "#test-helpers/*": "./tests/helpers/*",
     "#utils/*": "./app/utils/*"
   },
@@ -21,8 +23,8 @@
     "build": "vite build",
     "dev": "vite",
     "start": "vite",
-    "sync": "node src/sync.ts",
-    "export": "node src/export.ts",
+    "sync": "node cli/sync.ts",
+    "export": "node cli/export.ts",
     "lint:eslint": "eslint . --cache",
     "lint:eslint:fix": "eslint . --fix",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",

@@ -1,6 +1,6 @@
-import { createClient } from '../src/config.ts';
-import { artistInfo, artistSimilar, artistTopTracks } from '../src/endpoints.ts';
-import { artistName, formatCount, printTrackTable, stripHtml } from '../src/format.ts';
+import { createClient } from '../config.ts';
+import { artistInfo, artistSimilar, artistTopTracks } from '../endpoints.ts';
+import { artistName, formatCount, printTrackTable, stripHtml } from '../format.ts';
 
 const query = process.argv.slice(2).join(' ').trim();
 

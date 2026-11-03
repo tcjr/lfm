@@ -1,7 +1,7 @@
 import { styleText } from 'node:util';
-import { createClient } from '../src/config.ts';
-import { userRecentTracks, userTopArtists } from '../src/endpoints.ts';
-import { artistName, formatCount } from '../src/format.ts';
+import { createClient } from '../config.ts';
+import { userRecentTracks, userTopArtists } from '../endpoints.ts';
+import { artistName, formatCount } from '../format.ts';
 
 const username = process.argv[2] ?? process.env.LASTFM_USER;
 

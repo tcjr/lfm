@@ -11,7 +11,7 @@ import type {
   TrackSearchResponse,
   UserTopArtistsResponse,
   UserTopTracksResponse,
-} from './types.ts';
+} from '#shared/types.ts';
 
 export interface PageOptions {
   limit?: number;

@@ -1,6 +1,6 @@
-import { createClient } from '../src/config.ts';
-import { trackInfo } from '../src/endpoints.ts';
-import { artistName, formatCount, formatDuration, stripHtml } from '../src/format.ts';
+import { createClient } from '../config.ts';
+import { trackInfo } from '../endpoints.ts';
+import { artistName, formatCount, formatDuration, stripHtml } from '../format.ts';
 
 const [artistArg, ...titleParts] = process.argv.slice(2);
 const title = titleParts.join(' ').trim();

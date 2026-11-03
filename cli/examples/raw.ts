@@ -1,5 +1,5 @@
-import { createClient } from '../src/config.ts';
-import { printJson } from '../src/format.ts';
+import { createClient } from '../config.ts';
+import { printJson } from '../format.ts';
 
 // Call any Last.fm method without writing code.
 //

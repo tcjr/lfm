@@ -1,5 +1,5 @@
 import type { TOC } from '@ember/component/template-only';
-import type { ScrobbleSnapshot } from '../../src/types.ts';
+import type { ScrobbleSnapshot } from '#shared/types.ts';
 
 interface ApplicationSignature {
   Args: {

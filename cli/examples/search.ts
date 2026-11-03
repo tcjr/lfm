@@ -1,6 +1,6 @@
-import { createClient } from '../src/config.ts';
-import { searchArtists, searchTracks } from '../src/endpoints.ts';
-import { artistName, formatCount, printTrackTable } from '../src/format.ts';
+import { createClient } from '../config.ts';
+import { searchArtists, searchTracks } from '../endpoints.ts';
+import { artistName, formatCount, printTrackTable } from '../format.ts';
 
 const query = process.argv.slice(2).join(' ').trim();
 

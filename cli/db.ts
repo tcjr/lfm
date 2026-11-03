@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { artistName, bestImage } from './format.ts';
-import type { ScrobbleRecord, ScrobbleSnapshot, Track } from './types.ts';
+import type { ScrobbleRecord, ScrobbleSnapshot, Track } from '#shared/types.ts';
 
 export const DEFAULT_DB_PATH = 'data/lastfm.db';
 export const DEFAULT_EXPORT_PATH = 'public/data/scrobbles.json';

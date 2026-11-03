@@ -1,4 +1,4 @@
-import type { LastfmImage, Track } from './types.ts';
+import type { LastfmImage, Track } from '#shared/types.ts';
 
 export function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));

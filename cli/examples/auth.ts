@@ -1,4 +1,4 @@
-import { createClient } from '../src/config.ts';
+import { createClient } from '../config.ts';
 
 // Browser auth flow:
 //   1. pnpm auth          -> prints a URL to authorize

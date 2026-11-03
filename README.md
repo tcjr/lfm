@@ -56,29 +56,29 @@ pnpm start
 
 ## CLI Examples
 
-Node strips TypeScript types at load time, so CLI scripts in `src/` and `examples/` run directly with no build step:
+Node strips TypeScript types at load time, so CLI scripts in `cli/` and `cli/examples/` run directly with no build step:
 
 ```sh
-node examples/artist.ts "Ass Ponys"         # artist info, top tracks, similar artists
-node examples/track.ts "Aphex Twin" "Xtal"  # track info, tags, wiki
-node examples/user.ts <username>            # recent tracks + top artists
-node examples/chart.ts                      # global top tracks
-node examples/search.ts afghan              # artist and track search
-node examples/playground.ts                 # edit examples/playground.ts and experiment
+node cli/examples/artist.ts "Ass Ponys"         # artist info, top tracks, similar artists
+node cli/examples/track.ts "Aphex Twin" "Xtal"  # track info, tags, wiki
+node cli/examples/user.ts <username>            # recent tracks + top artists
+node cli/examples/chart.ts                      # global top tracks
+node cli/examples/search.ts afghan              # artist and track search
+node cli/examples/playground.ts                 # edit cli/examples/playground.ts and experiment
 ```
 
-`node examples/raw.ts` calls any method directly. Parameters are `key=value` pairs:
+`node cli/examples/raw.ts` calls any method directly. Parameters are `key=value` pairs:
 
 ```sh
-node examples/raw.ts artist.getTopAlbums artist="Afghan Whigs" limit=5
-node examples/raw.ts user.getRecentTracks user=rj limit=3
-node examples/raw.ts tag.getTopArtists tag=shoegaze limit=5
+node cli/examples/raw.ts artist.getTopAlbums artist="Afghan Whigs" limit=5
+node cli/examples/raw.ts user.getRecentTracks user=rj limit=3
+node cli/examples/raw.ts tag.getTopArtists tag=shoegaze limit=5
 ```
 
 Add `--signed` for authenticated methods:
 
 ```sh
-node examples/raw.ts track.love --signed artist="Aphex Twin" track=Xtal
+node cli/examples/raw.ts track.love --signed artist="Aphex Twin" track=Xtal
 ```
 
 ## Authentication
@@ -86,13 +86,13 @@ node examples/raw.ts track.love --signed artist="Aphex Twin" track=Xtal
 Some methods require a user session. The project includes a browser auth flow:
 
 ```sh
-node examples/auth.ts
+node cli/examples/auth.ts
 ```
 
 Open the printed URL, authorize the app, then run the printed follow-up command:
 
 ```sh
-node examples/auth.ts <token>
+node cli/examples/auth.ts <token>
 ```
 
 Copy the resulting session key into `.env` as `LASTFM_SESSION_KEY`. Signed requests will then include it automatically.

@@ -1,5 +1,5 @@
 import Route from '@ember/routing/route';
-import type { ScrobbleSnapshot } from '../../src/types.ts';
+import type { ScrobbleSnapshot } from '#shared/types.ts';
 
 export default class ApplicationRoute extends Route {
   async model(): Promise<ScrobbleSnapshot> {
