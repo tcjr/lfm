@@ -1,8 +1,8 @@
 when:
-  - event: ["push", "manual"]
-    branch: ["main"]
-  - event: ["pull_request"]
-    branch: ["main"]
+  - event: ['push', 'manual']
+    branch: ['main']
+  - event: ['pull_request']
+    branch: ['main']
 
 engine: microvm
 image: nixos
@@ -13,15 +13,15 @@ dependencies:
   - chromium
 
 environment:
-  CHROME_BIN: "chromium"
+  CHROME_BIN: 'chromium'
   # Applies the bypass settings globally to all pnpm subcommands
-  PNPM_CONFIG_PM_ON_FAIL: "ignore"
-  PNPM_CONFIG_SUPPORTED_ARCHITECTURES_LIBC: "custom"
+  PNPM_CONFIG_PM_ON_FAIL: 'ignore'
+  PNPM_CONFIG_SUPPORTED_ARCHITECTURES_LIBC: 'custom'
 
 steps:
-  - name: "Install dependencies"
+  - name: 'Install dependencies'
     command: pnpm install --frozen-lockfile
-  - name: "Lint"
+  - name: 'Lint'
     command: pnpm lint
-  - name: "Test"
+  - name: 'Test'
     command: pnpm test:ci
