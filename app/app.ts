@@ -10,6 +10,7 @@
  *   - https://ember-primitives.pages.dev/6-utils/createAsyncService.md
  */
 import Application from '@ember/application';
+import './app.css';
 
 export default class App extends Application {
   modules = {
