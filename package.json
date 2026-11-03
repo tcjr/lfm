@@ -69,6 +69,7 @@
     "ember-eslint": "^1.0.0",
     "ember-qunit": "^9.2.0",
     "eslint": "^10.14.0",
+    "eslint-plugin-ember": "^13.9.1",
     "prettier": "^3.9.10",
     "prettier-plugin-ember-template-tag": "^2.1.8",
     "qunit": "^2.26.0",

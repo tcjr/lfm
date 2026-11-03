@@ -6,9 +6,6 @@
  * Handles: (G)TS + (G)JS, QUnit, Supporting Node files
  */
 import { ember } from 'ember-eslint';
+import templateLintMigration from 'eslint-plugin-ember/configs/template-lint-migration';
 
-export default [
-  ...ember.recommended(import.meta.dirname),
-  // your modifications here
-  // see: https://eslint.org/docs/user-guide/configuring/configuration-files#how-do-overrides-work
-];
+export default [...ember.recommended(import.meta.dirname), ...templateLintMigration];

@@ -89,9 +89,13 @@ export default class ScrobblesDateFilter extends Component<ScrobblesDateFilterSi
         </label>
 
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="btn btn-sm" {{on "click" this.last30}}>Last 30 days</button>
-          <button type="button" class="btn btn-sm" {{on "click" this.last60}}>Last 60 days</button>
-          <button class="btn btn-sm btn-ghost" {{on "click" this.clear}}>Clear</button>
+          {{!-- <button type="button" class="btn btn-sm" {{on "click" this.last30}}>Last 30 days</button>
+          <button type="button" class="btn btn-sm" {{on "click" this.last60}}>Last 60 days</button> --}}
+          <button
+            class="btn btn-sm btn-ghost"
+            {{on "click" this.clear}}
+            type="button"
+          >Clear</button>
         </div>
       </div>
 
