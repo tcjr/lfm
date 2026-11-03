@@ -14,12 +14,10 @@ dependencies:
 
 environment:
   CHROME_BIN: "chromium"
-  # Add this flag to tell pnpm never to fetch or use the native @pnpm/exe bundle
-  PNPM_EXEC_FROM_HOMEDIR: "false"
 
 steps:
   - name: "Install dependencies"
-    command: pnpm install --frozen-lockfile
+    command: pnpm install --frozen-lockfile --pm-on-fail=ignore --config.supportedArchitectures.libc=custom
   - name: "Lint"
     command: pnpm lint
   - name: "Test"
