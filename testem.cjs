@@ -1,44 +1,36 @@
 'use strict';
 
-const isCI = !!process.env.CI;
+const ciBrowserArgs = [
+  // --no-sandbox is needed when running Chrome/Chromium inside a container or VM
+  process.env.CI ? '--no-sandbox' : null,
+  '--headless',
+  '--disable-dev-shm-usage',
+  '--disable-software-rasterizer',
+  '--mute-audio',
+  '--remote-debugging-port=0',
+  '--window-size=1440,900',
+].filter(Boolean);
 
-module.exports = {
-  test_page: 'tests/index.html?hidepassed',
-  cwd: 'dist',
-  disable_watching: true,
-  // Force testem to bind to the local loopback explicitly
-  host: '127.0.0.1',
-  launch_in_ci: [isCI ? 'Chromium' : 'Chrome'],
-  launch_in_dev: ['Chrome'],
-  browser_start_timeout: 120,
-  browser_args: {
-    Chrome: {
-      ci: [
-        '--no-sandbox',
-        '--headless',
-        '--disable-dev-shm-usage',
-        '--disable-software-rasterizer',
-        '--mute-audio',
-        '--remote-debugging-port=0',
-        '--window-size=1440,900',
-      ].filter(Boolean),
+if (typeof module !== 'undefined') {
+  module.exports = {
+    test_page: 'tests/index.html?hidepassed',
+    cwd: 'dist',
+    disable_watching: true,
+    launch_in_ci: [process.env.CI_BROWSER || 'Chrome'],
+    launch_in_dev: ['Chrome'],
+    browser_start_timeout: 120,
+    browser_exes: {
+      Chrome: ['google-chrome', 'google-chrome-stable', 'chrome', 'chromium-browser', 'chromium'],
     },
-    Chromium: {
-      ci: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--headless=new',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-software-rasterizer',
-        '--mute-audio',
-        '--remote-debugging-port=0',
-        // Prevents Chromium from getting stuck looking for system window managers/DBus
-        '--disable-ext-v8-runner',
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--window-size=1440,900',
-      ],
+    browser_args: {
+      Chrome: {
+        ci: ciBrowserArgs,
+      },
+      Chromium: {
+        ci: ciBrowserArgs,
+      },
     },
-  },
-};
+    // only emit console logs for failed tests
+    tap_quiet_logs: true,
+  };
+}
