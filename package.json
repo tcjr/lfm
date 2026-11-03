@@ -32,7 +32,7 @@
     "format": "prettier --write .",
     "lint:prettier": "prettier --check .",
     "build:test": "EMBER_ENV=test NODE_ENV=development vite build --mode development",
-    "test:ci": "testem ci --port 0",
+    "test:ci": "pnpm build:test && testem ci --port 0",
     "test": "pnpm build:test && pnpm test:ci",
     "lint:types": "tsc --noEmit --runExternalCode",
     "typecheck": "tsc --noEmit --runExternalCode"
