@@ -239,6 +239,9 @@ importers:
       concurrently:
         specifier: ^9.2.5
         version: 9.2.5
+      daisyui:
+        specifier: ^5.7.50
+        version: 5.7.50
       ember-content-mapper:
         specifier: ^0.3.2
         version: 0.3.2(@glint/ember-tsc@1.14.3(@typescript/typescript6@6.0.2)(ember-source@7.2.1(@glimmer/component@2.2.1)(supports-color@8.1.1))(supports-color@8.1.1))
@@ -2193,6 +2196,9 @@ packages:
   cssstyle@4.6.0:
     resolution: {integrity: sha512-2z+rWdzbbSZv6/rhtvzvqeZQHrBaqgogqt85sqFNbabZOuFbCVFb8kPeEtZjiKkbrm395irpNKiYeFeLiQnFPg==}
     engines: {node: '>=18'}
+
+  daisyui@5.7.50:
+    resolution: {integrity: sha512-+/LRqnTCoc7s/bJEKKwtJSwzeXCVdAmRdNmZeZzgHCaQ9PJyl7j+2V2U32GQDMyD+VDkP9e/+JGoC72Y1hLk7w==}
 
   data-urls@5.0.0:
     resolution: {integrity: sha512-ZYP5VBHshaDAiVZxjbRVcFJpc+4xGgT0bK3vzy1HLN8jTO975HEbuYzZJcHoQEY5K1a0z8YayJkyVETa08eNTg==}
@@ -6358,6 +6364,8 @@ snapshots:
     dependencies:
       '@asamuzakjp/css-color': 3.2.0
       rrweb-cssom: 0.8.0
+
+  daisyui@5.7.50: {}
 
   data-urls@5.0.0:
     dependencies:

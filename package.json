@@ -64,6 +64,7 @@
     "babel-plugin-debug-macros": "^2.0.0",
     "babel-plugin-ember-template-compilation": "^4.0.1",
     "concurrently": "^9.2.5",
+    "daisyui": "^5.7.50",
     "ember-content-mapper": "^0.3.2",
     "ember-eslint": "^1.0.0",
     "ember-qunit": "^9.2.0",
