@@ -1,19 +1,20 @@
 {
+  "extends": "@ember/app-tsconfig",
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "types": ["node"],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": true,
-    "allowImportingTsExtensions": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "noEmit": true
+    "allowJs": true,
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": [
+      "node",
+      "ember-source/types",
+      "@embroider/core/virtual",
+      "vite/client",
+      "@glint/ember-tsc/types"
+    ]
   },
-  "include": ["src", "examples"]
+  "contentMappers": [
+    {
+      "package": "ember-content-mapper",
+      "extensions": [".gts", ".gjs"]
+    }
+  ]
 }

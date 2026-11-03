@@ -1,16 +1,15 @@
 # lastfm-lab
 
-A small TypeScript playground for the [Last.fm API](https://www.last.fm/api).
+A TypeScript playground and Ember visualization lab for the [Last.fm API](https://www.last.fm/api), generated with `ember.nvp`.
 
-It gives you a typed client, a few ready-made examples, and a raw `pnpm raw`
-escape hatch so you can try any API method without writing code.
+## Getting Started
 
-## Requirements
+### Prerequisites
 
-- Node.js 22.18+ (runs TypeScript directly, no build step)
+- Node.js >= 24 (runs TypeScript directly for CLI scripts and includes built-in `node:sqlite`)
 - pnpm
 
-## Setup
+### Setup
 
 1. Create a Last.fm API account at <https://www.last.fm/api/account/create>.
    You'll get an API key and a shared secret.
@@ -26,7 +25,7 @@ escape hatch so you can try any API method without writing code.
    cp .env.example .env
    ```
 
-4. Put your API key (and secret) in `.env`:
+4. Put your API key (and secret/username) in `.env`:
 
    ```dotenv
    LASTFM_API_KEY=your_key
@@ -34,21 +33,32 @@ escape hatch so you can try any API method without writing code.
    LASTFM_USER=your_username
    ```
 
-`LASTFM_API_SECRET` is only needed for signed methods (auth, scrobbling,
-loving tracks). `LASTFM_USER` is only used as the default for `examples/user.ts`.
+`LASTFM_API_SECRET` is only needed for signed methods (auth, scrobbling, loving tracks).
 
-## How it runs
+### Syncing Scrobble Data & Running the Front-End
 
-Node strips TypeScript types at load time, so there is no build step or
-transpiler. Relative imports therefore use `.ts` extensions, and only erasable
-syntax is allowed (no `enum`, `namespace`, or constructor parameter
-properties). Use `node --experimental-transform-types` if you ever need those.
-
-## Commands
+Download your scrobbles into the local SQLite database (`data/lastfm.db`) and export the front-end JSON snapshot (`public/data/scrobbles.json`):
 
 ```sh
-pnpm format                                 # format with Prettier
-pnpm typecheck
+pnpm sync                              # initial 3 months, or incremental since last sync
+pnpm sync -- --months 6                # backfill the last 6 months
+pnpm sync -- --from 2026-01-01         # backfill from an ISO date or unix timestamp
+pnpm export                            # regenerate public/data/scrobbles.json offline from SQLite
+```
+
+Start the local Ember development server:
+
+```sh
+pnpm dev
+# or
+pnpm start
+```
+
+## CLI Examples
+
+Node strips TypeScript types at load time, so CLI scripts in `src/` and `examples/` run directly with no build step:
+
+```sh
 node examples/artist.ts "Ass Ponys"         # artist info, top tracks, similar artists
 node examples/track.ts "Aphex Twin" "Xtal"  # track info, tags, wiki
 node examples/user.ts <username>            # recent tracks + top artists
@@ -85,60 +95,27 @@ Open the printed URL, authorize the app, then run the printed follow-up command:
 node examples/auth.ts <token>
 ```
 
-Copy the resulting session key into `.env` as `LASTFM_SESSION_KEY`. Signed
-requests will then include it automatically.
+Copy the resulting session key into `.env` as `LASTFM_SESSION_KEY`. Signed requests will then include it automatically.
 
-## Project layout
+## Features & Tooling
 
-```
-src/
-  client.ts     # Last.fm client: requests, signing, rate limiting, retries
-  config.ts     # .env loading + client factory
-  endpoints.ts  # typed helpers for common methods
-  types.ts      # response types (numbers arrive as strings from Last.fm)
-  format.ts     # console output helpers
-examples/
-  artist.ts
-  track.ts
-  user.ts
-  chart.ts
-  search.ts
-  raw.ts
-  auth.ts
-  playground.ts
-```
+### Prettier
 
-## Adding a typed endpoint
+Code formatting is managed with [Prettier](https://prettier.io/).
 
-Add a function to `src/endpoints.ts`:
+- `pnpm format` - Format code
+- `pnpm lint:prettier` - Check code formatting
 
-```ts
-export function albumInfo(client: LastfmClient, artist: string, album: string) {
-  return client.call<{ album: unknown }>('album.getInfo', { artist, album });
-}
-```
+### TypeScript
 
-Or skip the helper and call the client directly:
+This project uses TypeScript 7 and [ember-content-mapper](https://github.com/NullVoxPopuli/ember-content-mapper) for static type checking.
 
-```ts
-const data = await client.call('album.getInfo', {
-  artist: 'Aphex Twin',
-  album: 'Selected Ambient Works 85-92',
-});
-```
+- `pnpm lint:types` - Typecheck code with TypeScript
+- Imports of `.gts` and `.gjs` modules must include the extension
+- Editor setup: see [ember-content-mapper's editors section](https://github.com/NullVoxPopuli/ember-content-mapper#editors)
 
-## Notes
+### Linting & Testing
 
-- Last.fm allows about 5 requests per second. The client serializes requests
-  and spaces them 200 ms apart by default.
-- Most numeric fields (`listeners`, `playcount`, `duration`, ...) are returned
-  as strings. Use `Number(...)` or the helpers in `src/format.ts`.
-- API errors come back with an `error` code and `message`. The client throws a
-  `LastfmError` with both.
-- Rate-limit (429) and server (5xx) responses are retried twice with backoff.
-
-## Links
-
-- API docs: <https://www.last.fm/api>
-- Method reference: <https://www.last.fm/api/intro>
-- API account: <https://www.last.fm/api/account/create>
+- `pnpm lint` - Run ESLint, Prettier, and TypeScript checks
+- `pnpm lint:fix` - Auto-fix lint and formatting issues
+- `pnpm test` - Build and run QUnit tests

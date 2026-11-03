@@ -1,5 +1,24 @@
-node_modules/
-dist/
+# unconventionally formatted files
+/.changeset
+
+# compiled output
+/dist/
+/tmp/
+/data/
+/public/data/
+
+# dependencies
+/node_modules/
+
+# lockfiles
 pnpm-lock.yaml
-.env
-.env.*
+package-lock.json
+
+# misc
+/.env*
+/.vite/
+/.pnp*
+.pnp.*
+
+# ember-try
+/.node_modules.ember-try/

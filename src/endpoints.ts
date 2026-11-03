@@ -54,7 +54,7 @@ export function trackInfo(client: LastfmClient, artist: string, track: string, u
 export function userRecentTracks(
   client: LastfmClient,
   user: string,
-  options: PageOptions & { from?: number; to?: number } = {},
+  options: PageOptions & { from?: number; to?: number; extended?: boolean | 0 | 1 } = {},
 ) {
   return client.call<RecentTracksResponse>('user.getRecentTracks', {
     user,
@@ -62,6 +62,7 @@ export function userRecentTracks(
     page: options.page,
     from: options.from,
     to: options.to,
+    extended: options.extended === undefined ? undefined : options.extended ? 1 : 0,
   });
 }
 

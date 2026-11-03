@@ -67,6 +67,7 @@ export interface Track {
   duration?: string;
   listeners?: string;
   playcount?: string;
+  loved?: string;
   streamable?: LastfmStreamable | string;
   artist: ArtistRef | string;
   album?: AlbumRef;
@@ -170,4 +171,23 @@ export interface TrackSearchResponse {
       track: Track[];
     };
   };
+}
+
+export interface ScrobbleRecord {
+  uts: number;
+  track: string;
+  artist: string;
+  album: string;
+  trackMbid?: string;
+  artistMbid?: string;
+  albumMbid?: string;
+  loved: boolean;
+  imageUrl?: string;
+}
+
+export interface ScrobbleSnapshot {
+  user: string;
+  exportedAt: string;
+  count: number;
+  scrobbles: ScrobbleRecord[];
 }
