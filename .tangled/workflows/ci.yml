@@ -14,10 +14,13 @@ dependencies:
 
 environment:
   CHROME_BIN: "chromium"
+  # Applies the bypass settings globally to all pnpm subcommands
+  PNPM_CONFIG_PM_ON_FAIL: "ignore"
+  PNPM_CONFIG_SUPPORTED_ARCHITECTURES_LIBC: "custom"
 
 steps:
   - name: "Install dependencies"
-    command: pnpm install --frozen-lockfile --pm-on-fail=ignore --config.supportedArchitectures.libc=custom
+    command: pnpm install --frozen-lockfile
   - name: "Lint"
     command: pnpm lint
   - name: "Test"
