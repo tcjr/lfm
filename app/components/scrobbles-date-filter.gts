@@ -70,7 +70,7 @@ export default class ScrobblesDateFilter extends Component<ScrobblesDateFilterSi
           <span class="label">From</span>
           <input
             type="date"
-            class="input"
+            class="input w-full sm:w-44"
             value={{this.from}}
             max={{if this.to this.to}}
             {{on "input" this.setFrom}}
@@ -81,7 +81,7 @@ export default class ScrobblesDateFilter extends Component<ScrobblesDateFilterSi
           <span class="label">To</span>
           <input
             type="date"
-            class="input"
+            class="input w-full sm:w-44"
             value={{this.to}}
             min={{if this.from this.from}}
             {{on "input" this.setTo}}
