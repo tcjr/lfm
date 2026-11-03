@@ -9,19 +9,12 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "artist": "node examples/artist.ts",
-    "track": "node examples/track.ts",
-    "user": "node examples/user.ts",
-    "chart": "node examples/chart.ts",
-    "search": "node examples/search.ts",
-    "raw": "node examples/raw.ts",
-    "auth": "node examples/auth.ts",
-    "play": "node examples/playground.ts",
-    "play:watch": "node --watch examples/playground.ts",
+    "format": "prettier --write .",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.0"
   }
 }

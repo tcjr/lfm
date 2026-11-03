@@ -1,8 +1,8 @@
-import { createClient } from "../src/config.ts";
-import { artistInfo, artistSimilar, artistTopTracks } from "../src/endpoints.ts";
-import { artistName, formatCount, printTrackTable, stripHtml } from "../src/format.ts";
+import { createClient } from '../src/config.ts';
+import { artistInfo, artistSimilar, artistTopTracks } from '../src/endpoints.ts';
+import { artistName, formatCount, printTrackTable, stripHtml } from '../src/format.ts';
 
-const query = process.argv.slice(2).join(" ").trim();
+const query = process.argv.slice(2).join(' ').trim();
 
 if (!query) {
   console.error('Usage: pnpm artist "Aphex Twin"');
@@ -20,9 +20,9 @@ console.log(artist.url);
 console.log(`\n${stripHtml(artist.bio.summary)}\n`);
 
 const top = await artistTopTracks(client, query, { limit: 5 });
-console.log("Top tracks");
+console.log('Top tracks');
 printTrackTable(top.toptracks.track);
 
 const similar = await artistSimilar(client, query, { limit: 5 });
-console.log("\nSimilar artists");
-console.log(similar.similarartists.artist.map((entry) => artistName(entry)).join(", "));
+console.log('\nSimilar artists');
+console.log(similar.similarartists.artist.map((entry) => artistName(entry)).join(', '));

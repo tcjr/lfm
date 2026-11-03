@@ -1,5 +1,5 @@
 export interface LastfmImage {
-  "#text": string;
+  '#text': string;
   size: string;
 }
 
@@ -16,13 +16,13 @@ export interface LastfmWiki {
 }
 
 export interface LastfmStreamable {
-  "#text": string;
+  '#text': string;
   fulltrack: string;
 }
 
 export interface ArtistRef {
   name?: string;
-  "#text"?: string;
+  '#text'?: string;
   mbid: string;
   url: string;
   image: LastfmImage[];
@@ -43,7 +43,7 @@ export interface Artist extends ArtistRef {
   };
   bio: LastfmWiki & {
     links: {
-      link: Array<{ "#text": string; rel: string; href: string }>;
+      link: Array<{ '#text': string; rel: string; href: string }>;
     };
   };
 }
@@ -51,11 +51,11 @@ export interface Artist extends ArtistRef {
 export interface AlbumRef {
   artist: string;
   title: string;
-  "#text"?: string;
+  '#text'?: string;
   mbid: string;
   url: string;
   image: LastfmImage[];
-  "@attr"?: {
+  '@attr'?: {
     position: string;
   };
 }
@@ -77,9 +77,9 @@ export interface Track {
   image?: LastfmImage[];
   date?: {
     uts: string;
-    "#text": string;
+    '#text': string;
   };
-  "@attr"?: {
+  '@attr'?: {
     rank?: string;
     nowplaying?: string;
   };
@@ -100,21 +100,21 @@ export interface ArtistInfoResponse {
 export interface ArtistTopTracksResponse {
   toptracks: {
     track: Track[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
 export interface ArtistTopAlbumsResponse {
   topalbums: {
     album: AlbumRef[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
 export interface ArtistSimilarResponse {
   similarartists: {
     artist: ArtistRef[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
@@ -125,28 +125,28 @@ export interface TrackInfoResponse {
 export interface RecentTracksResponse {
   recenttracks: {
     track: Track[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
 export interface UserTopArtistsResponse {
   topartists: {
     artist: Array<ArtistRef & { playcount: string }>;
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
 export interface UserTopTracksResponse {
   toptracks: {
     track: Track[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
 export interface ChartTopTracksResponse {
   tracks: {
     track: Track[];
-    "@attr": PagedAttr;
+    '@attr': PagedAttr;
   };
 }
 
@@ -156,7 +156,7 @@ export interface ArtistSearchResult extends ArtistRef {
 
 export interface ArtistSearchResponse {
   results: {
-    "opensearch:totalResults": string;
+    'opensearch:totalResults': string;
     artistmatches: {
       artist: ArtistSearchResult[];
     };
@@ -165,7 +165,7 @@ export interface ArtistSearchResponse {
 
 export interface TrackSearchResponse {
   results: {
-    "opensearch:totalResults": string;
+    'opensearch:totalResults': string;
     trackmatches: {
       track: Track[];
     };

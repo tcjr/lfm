@@ -1,7 +1,7 @@
-import { createHash } from "node:crypto";
+import { createHash } from 'node:crypto';
 
-const API_ROOT = "https://ws.audioscrobbler.com/2.0/";
-const AUTH_URL = "https://www.last.fm/api/auth/";
+const API_ROOT = 'https://ws.audioscrobbler.com/2.0/';
+const AUTH_URL = 'https://www.last.fm/api/auth/';
 
 export class LastfmError extends Error {
   readonly code: number;
@@ -9,7 +9,7 @@ export class LastfmError extends Error {
 
   constructor(code: number, message: string, method: string) {
     super(`[${code}] ${message} (${method})`);
-    this.name = "LastfmError";
+    this.name = 'LastfmError';
     this.code = code;
     this.method = method;
   }
@@ -62,7 +62,7 @@ export class LastfmClient {
     this.apiKey = options.apiKey;
     this.apiSecret = options.apiSecret;
     this.sessionKey = options.sessionKey;
-    this.userAgent = options.userAgent ?? "lastfm-lab/0.1";
+    this.userAgent = options.userAgent ?? 'lastfm-lab/0.1';
     this.minIntervalMs = options.minIntervalMs ?? 200;
     this.maxRetries = options.maxRetries ?? 2;
   }
@@ -79,7 +79,7 @@ export class LastfmClient {
     const query = new URLSearchParams({
       method,
       api_key: this.apiKey,
-      format: "json",
+      format: 'json',
     });
 
     for (const [key, value] of Object.entries(params)) {
@@ -93,9 +93,9 @@ export class LastfmClient {
         throw new Error(`"${method}" is a signed method, but no API secret was configured.`);
       }
       if (this.sessionKey) {
-        query.set("sk", this.sessionKey);
+        query.set('sk', this.sessionKey);
       }
-      query.set("api_sig", this.signature(query));
+      query.set('api_sig', this.signature(query));
     }
 
     const data = await this.request(`${API_ROOT}?${query.toString()}`, method);
@@ -104,17 +104,17 @@ export class LastfmClient {
 
   /** Get a request token for the desktop/browser auth flow. */
   async getToken(): Promise<string> {
-    const response = await this.call<{ token: string }>("auth.getToken", {}, { signed: true });
+    const response = await this.call<{ token: string }>('auth.getToken', {}, { signed: true });
     return response.token;
   }
 
   /** Build the URL the user visits to authorize the token. */
   getAuthUrl(token: string, callbackUrl?: string): string {
     const url = new URL(AUTH_URL);
-    url.searchParams.set("api_key", this.apiKey);
-    url.searchParams.set("token", token);
+    url.searchParams.set('api_key', this.apiKey);
+    url.searchParams.set('token', token);
     if (callbackUrl) {
-      url.searchParams.set("cb", callbackUrl);
+      url.searchParams.set('cb', callbackUrl);
     }
     return url.toString();
   }
@@ -122,7 +122,7 @@ export class LastfmClient {
   /** Exchange an authorized token for a session key. */
   async getSession(token: string): Promise<Session> {
     const response = await this.call<{ session: Session }>(
-      "auth.getSession",
+      'auth.getSession',
       { token },
       { signed: true },
     );
@@ -132,15 +132,17 @@ export class LastfmClient {
 
   private signature(params: URLSearchParams): string {
     if (!this.apiSecret) {
-      throw new Error("Cannot sign a request without an API secret.");
+      throw new Error('Cannot sign a request without an API secret.');
     }
 
     const keys = [...params.keys()]
-      .filter((key) => key !== "format" && key !== "callback" && key !== "api_sig")
+      .filter((key) => key !== 'format' && key !== 'callback' && key !== 'api_sig')
       .sort();
 
-    const raw = keys.map((key) => `${key}${params.get(key) ?? ""}`).join("");
-    return createHash("md5").update(raw + this.apiSecret).digest("hex");
+    const raw = keys.map((key) => `${key}${params.get(key) ?? ''}`).join('');
+    return createHash('md5')
+      .update(raw + this.apiSecret)
+      .digest('hex');
   }
 
   private async request(url: string, method: string): Promise<unknown> {
@@ -149,8 +151,8 @@ export class LastfmClient {
 
       const response = await fetch(url, {
         headers: {
-          Accept: "application/json",
-          "User-Agent": this.userAgent,
+          Accept: 'application/json',
+          'User-Agent': this.userAgent,
         },
       });
 
@@ -200,12 +202,12 @@ export class LastfmClient {
 
 function isLastfmErrorBody(value: unknown): value is { error: number; message: string } {
   return (
-    typeof value === "object" &&
+    typeof value === 'object' &&
     value !== null &&
-    "error" in value &&
-    typeof (value as { error?: unknown }).error === "number" &&
-    "message" in value &&
-    typeof (value as { message?: unknown }).message === "string"
+    'error' in value &&
+    typeof (value as { error?: unknown }).error === 'number' &&
+    'message' in value &&
+    typeof (value as { message?: unknown }).message === 'string'
   );
 }
 

@@ -1,7 +1,7 @@
-import { existsSync } from "node:fs";
-import { LastfmClient } from "./client.ts";
+import { existsSync } from 'node:fs';
+import { LastfmClient } from './client.ts';
 
-const ENV_FILE = ".env";
+const ENV_FILE = '.env';
 
 export interface LastfmConfig {
   apiKey: string;
@@ -23,19 +23,21 @@ export function loadEnv(): void {
   }
 }
 
-export function getConfig(): LastfmConfig {
-  loadEnv();
+// Load `.env` when this module is imported so scripts can read process.env at
+// the top of the file, before createClient() is called.
+loadEnv();
 
+export function getConfig(): LastfmConfig {
   const apiKey = process.env.LASTFM_API_KEY?.trim();
   if (!apiKey) {
     console.error(
       [
-        "Missing LASTFM_API_KEY.",
-        "",
-        "  1. Create an API account: https://www.last.fm/api/account/create",
-        "  2. cp .env.example .env",
-        "  3. Put your key in .env",
-      ].join("\n"),
+        'Missing LASTFM_API_KEY.',
+        '',
+        '  1. Create an API account: https://www.last.fm/api/account/create',
+        '  2. cp .env.example .env',
+        '  3. Put your key in .env',
+      ].join('\n'),
     );
     process.exit(1);
   }

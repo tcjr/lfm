@@ -35,7 +35,7 @@ escape hatch so you can try any API method without writing code.
    ```
 
 `LASTFM_API_SECRET` is only needed for signed methods (auth, scrobbling,
-loving tracks). `LASTFM_USER` is only used as the default for `pnpm user`.
+loving tracks). `LASTFM_USER` is only used as the default for `examples/user.ts`.
 
 ## How it runs
 
@@ -47,29 +47,28 @@ properties). Use `node --experimental-transform-types` if you ever need those.
 ## Commands
 
 ```sh
-pnpm artist "Aphex Twin"        # artist info, top tracks, similar artists
-pnpm track "Aphex Twin" "Xtal"  # track info, tags, wiki
-pnpm user <username>            # recent tracks + top artists
-pnpm chart                      # global top tracks
-pnpm search "aphex"             # artist and track search
-pnpm play                       # edit examples/playground.ts and experiment
-pnpm play:watch                 # same, with auto-reload on changes
-pnpm raw artist.getInfo artist="Aphex Twin"
+pnpm format                                 # format with Prettier
 pnpm typecheck
+node examples/artist.ts "Ass Ponys"         # artist info, top tracks, similar artists
+node examples/track.ts "Aphex Twin" "Xtal"  # track info, tags, wiki
+node examples/user.ts <username>            # recent tracks + top artists
+node examples/chart.ts                      # global top tracks
+node examples/search.ts afghan              # artist and track search
+node examples/playground.ts                 # edit examples/playground.ts and experiment
 ```
 
-`pnpm raw` calls any method directly. Parameters are `key=value` pairs:
+`node examples/raw.ts` calls any method directly. Parameters are `key=value` pairs:
 
 ```sh
-pnpm raw artist.getTopAlbums artist="Aphex Twin" limit=5
-pnpm raw user.getRecentTracks user=rj limit=3
-pnpm raw tag.getTopArtists tag=shoegaze limit=5
+node examples/raw.ts artist.getTopAlbums artist="Afghan Whigs" limit=5
+node examples/raw.ts user.getRecentTracks user=rj limit=3
+node examples/raw.ts tag.getTopArtists tag=shoegaze limit=5
 ```
 
 Add `--signed` for authenticated methods:
 
 ```sh
-pnpm raw track.love --signed artist="Aphex Twin" track=Xtal
+node examples/raw.ts track.love --signed artist="Aphex Twin" track=Xtal
 ```
 
 ## Authentication
@@ -77,13 +76,13 @@ pnpm raw track.love --signed artist="Aphex Twin" track=Xtal
 Some methods require a user session. The project includes a browser auth flow:
 
 ```sh
-pnpm auth
+node examples/auth.ts
 ```
 
 Open the printed URL, authorize the app, then run the printed follow-up command:
 
 ```sh
-pnpm auth <token>
+node examples/auth.ts <token>
 ```
 
 Copy the resulting session key into `.env` as `LASTFM_SESSION_KEY`. Signed
@@ -115,14 +114,17 @@ Add a function to `src/endpoints.ts`:
 
 ```ts
 export function albumInfo(client: LastfmClient, artist: string, album: string) {
-  return client.call<{ album: unknown }>("album.getInfo", { artist, album });
+  return client.call<{ album: unknown }>('album.getInfo', { artist, album });
 }
 ```
 
 Or skip the helper and call the client directly:
 
 ```ts
-const data = await client.call("album.getInfo", { artist: "Aphex Twin", album: "Selected Ambient Works 85-92" });
+const data = await client.call('album.getInfo', {
+  artist: 'Aphex Twin',
+  album: 'Selected Ambient Works 85-92',
+});
 ```
 
 ## Notes
