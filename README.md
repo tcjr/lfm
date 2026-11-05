@@ -50,8 +50,6 @@ Start the local Ember development server:
 
 ```sh
 pnpm dev
-# or
-pnpm start
 ```
 
 ## CLI Examples
@@ -105,7 +103,7 @@ Pages render to HTML files at build time, with [vite-ember-ssr](https://github.c
 The routes to render are in `vite.config.mjs`.
 
 - `pnpm build` - Build the app, and render the routes to `dist`
-- `pnpm start` - Serve `dist`
+- `pnpm preview` - Serve `dist`
 
 ### Prettier
 
