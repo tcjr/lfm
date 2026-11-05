@@ -7,7 +7,11 @@ export default class Router extends EmbroiderRouter {
   rootURL = config.rootURL;
 }
 
-Router.map(function () {});
+Router.map(function () {
+  this.route('scrobbles', function () {
+    this.route('recent');
+  });
+});
 
 /**
  * Route bundles (lazy-loaded route groups) have no nice API yet.

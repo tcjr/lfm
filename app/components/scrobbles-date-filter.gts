@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import type { ScrobbleRecord } from '#shared/types.ts';
-import { filterScrobblesByDateRange, isValidDateRange } from '#utils/filter-scrobbles.ts';
+import { daysAgo, filterScrobblesByDateRange, isValidDateRange } from '#utils/filter-scrobbles.ts';
 
 export interface ScrobblesDateFilterSignature {
   Args: {
@@ -10,20 +10,6 @@ export interface ScrobblesDateFilterSignature {
   Blocks: {
     default: [filtered: ScrobbleRecord[], isValid: boolean];
   };
-}
-
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
-}
-
-function daysAgo(days: number): string {
-  const today = new Date();
-
-  return toDateInputValue(new Date(today.getFullYear(), today.getMonth(), today.getDate() - days));
 }
 
 export default class ScrobblesDateFilter extends Component<ScrobblesDateFilterSignature> {
