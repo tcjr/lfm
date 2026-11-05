@@ -7,9 +7,14 @@ export default defineConfig({
   plugins: [
     ember(),
     emberSsg({
-      // specify all routes to render during build
-      routes: ['index'],
+      // specify all paths to render during build
+      routes: [
+        'index', // special name
+        'scrobbles',
+        'scrobbles/recent',
+      ],
       ssrEntry: 'app/app-ssr',
+      // shoebox: true,
     }),
     tailwindcss(),
   ],

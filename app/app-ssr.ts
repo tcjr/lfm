@@ -60,6 +60,10 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise
  * so pending data, timers, and test waiters are part of the page.
  */
 export { settled } from '@ember/test-helpers';
+
+/**
+ * Entrypoint used by vite-ember-ssr.
+ */
 export function createSsrApp() {
   return App.create({ ...config.APP, autoboot: false });
 }
