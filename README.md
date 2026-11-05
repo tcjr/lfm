@@ -99,6 +99,14 @@ Copy the resulting session key into `.env` as `LASTFM_SESSION_KEY`. Signed reque
 
 ## Features & Tooling
 
+### Rendering to HTML
+
+Pages render to HTML files at build time, with [vite-ember-ssr](https://github.com/evoactivity/vite-ember-ssr), and the browser rehydrates them.
+The routes to render are in `vite.config.mjs`.
+
+- `pnpm build` - Build the app, and render the routes to `dist`
+- `pnpm start` - Serve `dist`
+
 ### Prettier
 
 Code formatting is managed with [Prettier](https://prettier.io/).
