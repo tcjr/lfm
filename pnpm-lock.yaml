@@ -248,6 +248,9 @@ importers:
       ember-eslint:
         specifier: ^1.0.0
         version: 1.0.0(@babel/core@7.29.7(supports-color@8.1.1))(@typescript-eslint/parser@8.72.1(@typescript/typescript6@6.0.2)(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1))(@typescript/typescript6@6.0.2)(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)
+      ember-page-title:
+        specifier: ^9.0.3
+        version: 9.0.3
       ember-primitives:
         specifier: ^0.63.1
         version: 0.63.1(@babel/core@7.29.7(supports-color@8.1.1))(@ember/test-helpers@5.7.0(@babel/core@7.29.7(supports-color@8.1.1)))(@ember/test-waiters@4.1.2)(@glimmer/component@2.2.1)(@glint/template@1.11.1)(ember-modifier@4.3.0(@babel/core@7.29.7(supports-color@8.1.1)))(ember-resources@7.1.0(@glimmer/component@2.2.1)(@glint/template@1.11.1))
@@ -1340,6 +1343,9 @@ packages:
       rollup:
         optional: true
 
+  '@simple-dom/document@1.4.0':
+    resolution: {integrity: sha512-/RUeVH4kuD3rzo5/91+h4Z1meLSLP66eXqpVAw/4aZmYozkeqUkMprq0znL4psX/adEed5cBgiNJcfMz/eKZLg==}
+
   '@simple-dom/interface@1.4.0':
     resolution: {integrity: sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==}
 
@@ -2364,6 +2370,10 @@ packages:
 
   ember-modifier@4.3.0:
     resolution: {integrity: sha512-O0rirSLQbGg0VJ/NqoQ4uN1bh2iAekZC/Ykma+FkjCM2ofrO38u+d8n3+AK6uVWeMJmogGX2KL+Is5fofoInJg==}
+
+  ember-page-title@9.0.3:
+    resolution: {integrity: sha512-fedRHUsvq8tIZgOii8jTrfAyeq+la/9H5eAzhNNwEyzo7nDMmqK2SxsyBUGXprd8fOacsPabLlzlucMi/4mUpA==}
+    engines: {node: 16.* || >= 18}
 
   ember-primitives@0.63.1:
     resolution: {integrity: sha512-VxcsWjHnPwtv1CE2Ll5rNgH9HSz4kYVN+5ze2/DP9VhV94pnCC005VcRAwPKxO0bQJkVpkOBuCinfJFkqnJEgA==}
@@ -5638,6 +5648,10 @@ snapshots:
       estree-walker: 2.0.2
       picomatch: 4.0.7
 
+  '@simple-dom/document@1.4.0':
+    dependencies:
+      '@simple-dom/interface': 1.4.0
+
   '@simple-dom/interface@1.4.0': {}
 
   '@socket.io/component-emitter@3.1.2': {}
@@ -6658,6 +6672,11 @@ snapshots:
       decorator-transforms: 2.4.0(@babel/core@7.29.7(supports-color@8.1.1))
     transitivePeerDependencies:
       - '@babel/core'
+
+  ember-page-title@9.0.3:
+    dependencies:
+      '@embroider/addon-shim': 1.11.0
+      '@simple-dom/document': 1.4.0
 
   ember-primitives@0.63.1(@babel/core@7.29.7(supports-color@8.1.1))(@ember/test-helpers@5.7.0(@babel/core@7.29.7(supports-color@8.1.1)))(@ember/test-waiters@4.1.2)(@glimmer/component@2.2.1)(@glint/template@1.11.1)(ember-modifier@4.3.0(@babel/core@7.29.7(supports-color@8.1.1)))(ember-resources@7.1.0(@glimmer/component@2.2.1)(@glint/template@1.11.1)):
     dependencies:

@@ -10,10 +10,13 @@
  *   - https://ember-primitives.pages.dev/6-utils/createAsyncService.md
  */
 import Application from '@ember/application';
+import EmberPageTitleService from 'ember-page-title/services/page-title';
 import './app.css';
 
 export default class App extends Application {
   modules = {
+    './services/page-title': EmberPageTitleService,
+
     ...import.meta.glob('./router.*', { eager: true }),
     ...import.meta.glob('./routes/**/*', { eager: true }),
     ...import.meta.glob('./templates/**/*', { eager: true }),

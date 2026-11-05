@@ -33,7 +33,8 @@
     "lint:prettier": "prettier --check .",
     "build:test": "EMBER_ENV=test NODE_ENV=development vite build --mode development",
     "test:ci": "pnpm build:test && testem ci --port 0",
-    "test": "pnpm build:test && pnpm test:ci",
+    "test": "pnpm build:test && testem ci",
+    "test:ui": "pnpm build:test && testem",
     "lint:types": "tsc --noEmit --runExternalCode",
     "typecheck": "tsc --noEmit --runExternalCode"
   },
@@ -67,6 +68,7 @@
     "daisyui": "^5.7.50",
     "ember-content-mapper": "^0.3.2",
     "ember-eslint": "^1.0.0",
+    "ember-page-title": "^9.0.3",
     "ember-primitives": "^0.63.1",
     "ember-qunit": "^9.2.0",
     "eslint": "^10.14.0",

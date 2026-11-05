@@ -1,4 +1,7 @@
+import { pageTitle } from 'ember-page-title';
+
 <template>
+  {{pageTitle "last.fm lab"}}
   <div class="min-h-screen w-full mx-auto px-4 bg-base-100">
     {{outlet}}
   </div>
@@ -30,7 +33,7 @@
 
     {{! Brand }}
     <aside
-      class="bg-base-300 py-4 px-8 w-full flex gap-2 flex-wrap justify-between items-center text-sm"
+      class="bg-base-300 py-4 px-8 w-full flex gap-2 flex-wrap justify-between items-center text-xs"
     >
       <p></p>
       <p>Made in Chicago - tcjr</p>
