@@ -58,7 +58,7 @@ function formatTime(uts: number): string {
 
 <template>
   <div class="overflow-x-auto">
-    <table class="table">
+    <table class="table table-xs">
       <thead>
         <tr>
           <th>Song</th>
@@ -68,7 +68,7 @@ function formatTime(uts: number): string {
       </thead>
       <tbody>
         {{#each (groupScrobblesByDay @scrobbles) as |group|}}
-          <tr class="bg-base-200">
+          <tr class="bg-secondary text-secondary-content">
             <th colspan="3" scope="colgroup" class="font-semibold">
               {{group.dateLabel}}
             </th>
@@ -77,7 +77,7 @@ function formatTime(uts: number): string {
             <tr>
               <td>{{scrobble.track}}</td>
               <td>{{scrobble.artist}}</td>
-              <td>{{formatTime scrobble.uts}}</td>
+              <td class="text-nowrap">{{formatTime scrobble.uts}}</td>
             </tr>
           {{/each}}
         {{/each}}
