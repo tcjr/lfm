@@ -14,10 +14,6 @@ interface ScrobblesRecentSignature {
 export default class ScrobblesRecent extends Component<ScrobblesRecentSignature> {
   @tracked view: ScrobbleView = 'by-day';
 
-  get isTable(): boolean {
-    return this.view === 'table';
-  }
-
   setView = (view: ScrobbleView): void => {
     this.view = view;
   };
@@ -26,9 +22,9 @@ export default class ScrobblesRecent extends Component<ScrobblesRecentSignature>
     <ScrobblesViewSelect @value={{this.view}} @onChange={{this.setView}} />
 
     {{#if @model.length}}
-      {{#if this.isTable}}
+      {{#if (eq this.view "table")}}
         <ScrobblesTable @scrobbles={{@model}} />
-      {{else}}
+      {{else if (eq this.view "by-day")}}
         <ScrobblesByDay @scrobbles={{@model}} />
       {{/if}}
     {{else}}

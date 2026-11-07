@@ -15,10 +15,6 @@ interface ScrobblesIndexSignature {
 export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
   @tracked view: ScrobbleView = 'by-day';
 
-  get isTable(): boolean {
-    return this.view === 'table';
-  }
-
   setView = (view: ScrobbleView): void => {
     this.view = view;
   };
@@ -29,9 +25,9 @@ export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
     <ScrobblesDateRangeSlider @scrobbles={{@model.scrobbles}} as |filtered isValid|>
       {{#if isValid}}
         {{#if filtered}}
-          {{#if this.isTable}}
+          {{#if (eq this.view "table")}}
             <ScrobblesTable @scrobbles={{filtered}} />
-          {{else}}
+          {{else if (eq this.view "by-day")}}
             <ScrobblesByDay @scrobbles={{filtered}} />
           {{/if}}
         {{else}}
