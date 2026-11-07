@@ -1,6 +1,9 @@
-import type { TOC } from '@ember/component/template-only';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import ScrobblesByDay from '#components/scrobbles-by-day.gts';
 import ScrobblesDateRangeSlider from '#components/scrobbles-date-range-slider.gts';
+import ScrobblesTable from '#components/scrobbles-table.gts';
+import ScrobblesViewSelect, { type ScrobbleView } from '#components/scrobbles-view-select.gts';
 import type { ScrobbleSnapshot } from '#shared/types.ts';
 
 interface ScrobblesIndexSignature {
@@ -9,14 +12,32 @@ interface ScrobblesIndexSignature {
   };
 }
 
-<template>
-  <ScrobblesDateRangeSlider @scrobbles={{@model.scrobbles}} as |filtered isValid|>
-    {{#if isValid}}
-      {{#if filtered}}
-        <ScrobblesByDay @scrobbles={{filtered}} />
-      {{else}}
-        <p class="text-base-content/70">No scrobbles match this date range.</p>
+export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
+  @tracked view: ScrobbleView = 'by-day';
+
+  get isTable(): boolean {
+    return this.view === 'table';
+  }
+
+  setView = (view: ScrobbleView): void => {
+    this.view = view;
+  };
+
+  <template>
+    <ScrobblesViewSelect @value={{this.view}} @onChange={{this.setView}} />
+
+    <ScrobblesDateRangeSlider @scrobbles={{@model.scrobbles}} as |filtered isValid|>
+      {{#if isValid}}
+        {{#if filtered}}
+          {{#if this.isTable}}
+            <ScrobblesTable @scrobbles={{filtered}} />
+          {{else}}
+            <ScrobblesByDay @scrobbles={{filtered}} />
+          {{/if}}
+        {{else}}
+          <p class="text-base-content/70">No scrobbles match this date range.</p>
+        {{/if}}
       {{/if}}
-    {{/if}}
-  </ScrobblesDateRangeSlider>
-</template> satisfies TOC<ScrobblesIndexSignature>;
+    </ScrobblesDateRangeSlider>
+  </template>
+}
