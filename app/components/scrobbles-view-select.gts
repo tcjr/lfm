@@ -9,14 +9,6 @@ export interface ScrobblesViewSelectSignature {
   };
 }
 
-function isByDay(view: ScrobbleView): boolean {
-  return view === 'by-day';
-}
-
-function isTable(view: ScrobbleView): boolean {
-  return view === 'table';
-}
-
 function handleChange(onChange: (view: ScrobbleView) => void): (event: Event) => void {
   return (event: Event) => {
     onChange((event.target as HTMLSelectElement).value as ScrobbleView);
@@ -28,8 +20,8 @@ function handleChange(onChange: (view: ScrobbleView) => void): (event: Event) =>
     <label class="flex flex-col gap-1">
       <span class="label">View</span>
       <select class="select w-full sm:w-44" {{on "change" (handleChange @onChange)}}>
-        <option value="by-day" selected={{isByDay @value}}>By day</option>
-        <option value="table" selected={{isTable @value}}>Table</option>
+        <option value="by-day" selected={{eq "by-day" @value}}>By day</option>
+        <option value="table" selected={{eq "table" @value}}>Table</option>
       </select>
     </label>
   </div>
