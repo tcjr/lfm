@@ -24,7 +24,7 @@ export default class ScrobblesRecent extends Component<ScrobblesRecentSignature>
 
     {{#if @model.length}}
       {{#if (eq this.view "grid")}}
-        <ScrobblesGrid @scrobbles={{@model}} @overlay="always" />
+        <ScrobblesGrid @scrobbles={{@model}} @overlay="always" @lovedIndicator="always" />
       {{else if (eq this.view "table")}}
         <ScrobblesTable @scrobbles={{@model}} />
       {{else if (eq this.view "by-day")}}

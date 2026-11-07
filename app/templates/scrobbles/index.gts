@@ -27,7 +27,7 @@ export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
       {{#if isValid}}
         {{#if filtered}}
           {{#if (eq this.view "grid")}}
-            <ScrobblesGrid @scrobbles={{filtered}} @overlay="hover" />
+            <ScrobblesGrid @scrobbles={{filtered}} @overlay="hover" @lovedIndicator="none" />
           {{else if (eq this.view "table")}}
             <ScrobblesTable @scrobbles={{filtered}} />
           {{else if (eq this.view "by-day")}}

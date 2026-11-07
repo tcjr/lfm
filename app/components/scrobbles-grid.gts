@@ -2,12 +2,14 @@ import type { TOC } from '@ember/component/template-only';
 import type { ScrobbleRecord } from '#shared/types.ts';
 import { Avatar } from 'ember-primitives';
 
-export type ScrobbleGridOverlay = 'always' | 'hover' | 'none';
+export type ScrobbleGridDisplayMode = 'always' | 'hover' | 'none';
+export type ScrobbleGridOverlay = ScrobbleGridDisplayMode;
 
 export interface ScrobblesGridSignature {
   Args: {
     scrobbles: ScrobbleRecord[];
-    overlay?: ScrobbleGridOverlay;
+    overlay?: ScrobbleGridDisplayMode;
+    lovedIndicator?: ScrobbleGridDisplayMode;
   };
 }
 
@@ -24,12 +26,16 @@ function formatFallbackText(scrobble: ScrobbleRecord): string {
   return (scrobble.album || scrobble.artist || '??').slice(0, 2);
 }
 
-function resolveOverlay(overlay: ScrobbleGridOverlay = 'always'): ScrobbleGridOverlay {
-  return overlay;
+function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleGridDisplayMode {
+  return mode;
 }
 
 <template>
-  {{#let (resolveOverlay @overlay) as |overlayMode|}}
+  {{#let
+    (resolveDisplayMode @overlay)
+    (resolveDisplayMode @lovedIndicator)
+    as |overlayMode lovedMode|
+  }}
     <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
       {{#each @scrobbles as |scrobble|}}
         <article
@@ -62,9 +68,12 @@ function resolveOverlay(overlay: ScrobbleGridOverlay = 'always'): ScrobbleGridOv
             </a.Fallback>
           </Avatar>
 
-          {{#if scrobble.loved}}
+          {{#if (and scrobble.loved (not (eq lovedMode "none")))}}
             <span
-              class="badge badge-sm absolute top-2.5 right-2.5 border-0 bg-black/55 px-1.5 text-red-400 backdrop-blur-xs"
+              class="badge badge-sm absolute top-2.5 right-2.5 border-0 bg-black/55 px-1.5 text-red-400 backdrop-blur-xs {{if
+                (eq lovedMode 'hover')
+                '-translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100'
+              }}"
               aria-label="Loved track"
               title="Loved track"
             >
