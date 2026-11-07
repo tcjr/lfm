@@ -13,6 +13,59 @@ export interface ScrobblesGridSignature {
   };
 }
 
+interface OverlayModeConfig {
+  visible: boolean;
+  fallback: string;
+  scrim: string;
+  details: string;
+}
+
+interface LovedModeConfig {
+  visible: boolean;
+  badge: string;
+}
+
+const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> = {
+  always: {
+    visible: true,
+    fallback: 'pb-8',
+    scrim:
+      'from-black/85 via-black/50 transition-colors duration-200 group-hover:from-black/95 group-hover:via-black/70 group-focus-visible:from-black/95 group-focus-visible:via-black/70',
+    details:
+      'grid grid-rows-[0fr] opacity-0 transition-all duration-200 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100',
+  },
+  hover: {
+    visible: true,
+    fallback:
+      'transition-transform duration-200 group-hover:-translate-y-6 group-focus-visible:-translate-y-6',
+    scrim:
+      'translate-y-2 from-black/95 via-black/70 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100',
+    details: '',
+  },
+  none: {
+    visible: false,
+    fallback: '',
+    scrim: '',
+    details: '',
+  },
+};
+
+const LOVED_MODE_CLASSES: Record<ScrobbleGridDisplayMode, LovedModeConfig> = {
+  always: {
+    visible: true,
+    badge: '',
+  },
+  hover: {
+    visible: true,
+    badge:
+      '-translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100',
+  },
+  none: {
+    visible: false,
+    badge: '',
+  },
+};
+
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -26,16 +79,16 @@ function formatFallbackText(scrobble: ScrobbleRecord): string {
   return (scrobble.album || scrobble.artist || '??').slice(0, 2);
 }
 
-function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleGridDisplayMode {
-  return mode;
+function resolveOverlayMode(mode: ScrobbleGridDisplayMode = 'always'): OverlayModeConfig {
+  return OVERLAY_MODE_CLASSES[mode];
+}
+
+function resolveLovedMode(mode: ScrobbleGridDisplayMode = 'always'): LovedModeConfig {
+  return LOVED_MODE_CLASSES[mode];
 }
 
 <template>
-  {{#let
-    (resolveDisplayMode @overlay)
-    (resolveDisplayMode @lovedIndicator)
-    as |overlayMode lovedMode|
-  }}
+  {{#let (resolveOverlayMode @overlay) (resolveLovedMode @lovedIndicator) as |overlay loved|}}
     <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
       {{#each @scrobbles as |scrobble|}}
         <article
@@ -52,28 +105,16 @@ function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleG
               class="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 group-focus-visible:scale-105"
             />
             <a.Fallback>
-              <span
-                class={{if
-                  (eq overlayMode "always")
-                  "pb-8"
-                  (if
-                    (eq overlayMode "hover")
-                    "transition-transform duration-200 group-hover:-translate-y-6 group-focus-visible:-translate-y-6"
-                    ""
-                  )
-                }}
-              >
+              <span class={{overlay.fallback}}>
                 {{formatFallbackText scrobble}}
               </span>
             </a.Fallback>
           </Avatar>
 
-          {{#if (and scrobble.loved (not (eq lovedMode "none")))}}
+          {{#if (and scrobble.loved loved.visible)}}
             <span
-              class="badge badge-sm absolute top-2.5 right-2.5 border-0 bg-black/55 px-1.5 text-red-400 backdrop-blur-xs {{if
-                (eq lovedMode 'hover')
-                '-translate-y-2 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100'
-              }}"
+              class="badge badge-sm absolute top-2.5 right-2.5 border-0 bg-black/55 px-1.5 text-red-400 backdrop-blur-xs
+                {{loved.badge}}"
               aria-label="Loved track"
               title="Loved track"
             >
@@ -91,9 +132,10 @@ function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleG
             </span>
           {{/if}}
 
-          {{#if (eq overlayMode "always")}}
+          {{#if overlay.visible}}
             <div
-              class="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-linear-to-t from-black/85 via-black/50 to-transparent p-3 pt-12 text-white transition-colors duration-200 group-hover:from-black/95 group-hover:via-black/70 group-focus-visible:from-black/95 group-focus-visible:via-black/70"
+              class="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col justify-end bg-linear-to-t to-transparent p-3 pt-12 text-white
+                {{overlay.scrim}}"
             >
               <p class="truncate text-sm font-semibold leading-tight drop-shadow-xs">
                 {{scrobble.track}}
@@ -102,9 +144,7 @@ function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleG
                 {{scrobble.artist}}
               </p>
 
-              <div
-                class="grid grid-rows-[0fr] opacity-0 transition-all duration-200 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100"
-              >
+              <div class={{overlay.details}}>
                 <div class="overflow-hidden">
                   <div
                     class="mt-1.5 border-t border-white/15 pt-1.5 text-[11px] leading-tight text-white/70"
@@ -115,25 +155,6 @@ function resolveDisplayMode(mode: ScrobbleGridDisplayMode = 'always'): ScrobbleG
                     <p class="mt-0.5 truncate text-white/65">{{formatUts scrobble.uts}}</p>
                   </div>
                 </div>
-              </div>
-            </div>
-          {{else if (eq overlayMode "hover")}}
-            <div
-              class="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 flex-col justify-end bg-linear-to-t from-black/95 via-black/70 to-transparent p-3 pt-12 text-white opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
-            >
-              <p class="truncate text-sm font-semibold leading-tight drop-shadow-xs">
-                {{scrobble.track}}
-              </p>
-              <p class="mt-0.5 truncate text-xs text-white/80 leading-tight">
-                {{scrobble.artist}}
-              </p>
-              <div
-                class="mt-1.5 border-t border-white/15 pt-1.5 text-[11px] leading-tight text-white/70"
-              >
-                {{#if scrobble.album}}
-                  <p class="truncate italic text-white/80">{{scrobble.album}}</p>
-                {{/if}}
-                <p class="mt-0.5 truncate text-white/65">{{formatUts scrobble.uts}}</p>
               </div>
             </div>
           {{/if}}
