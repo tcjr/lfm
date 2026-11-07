@@ -75,7 +75,7 @@ function formatFallbackText(scrobble: ScrobbleRecord) {
       <tbody>
         {{#each (groupScrobblesByDay @scrobbles) as |group|}}
           <tr class="bg-secondary text-secondary-content">
-            <th colspan="3" scope="colgroup" class="font-semibold">
+            <th colspan="4" scope="colgroup" class="font-semibold">
               {{group.dateLabel}}
             </th>
           </tr>

@@ -2,6 +2,12 @@ import type { TOC } from '@ember/component/template-only';
 import type { ScrobbleRecord } from '#shared/types.ts';
 import { Avatar } from 'ember-primitives';
 
+/**
+ * Controls when a tile sub-element (metadata overlay or loved badge) is shown:
+ * - `'always'`: visible at rest; secondary details expand on hover/focus.
+ * - `'hover'`: hidden at rest; slides/fades in on tile hover or keyboard focus.
+ * - `'none'`: omitted from the DOM entirely.
+ */
 export type ScrobbleGridDisplayMode = 'always' | 'hover' | 'none';
 export type ScrobbleGridOverlay = ScrobbleGridDisplayMode;
 
@@ -13,19 +19,31 @@ export interface ScrobblesGridSignature {
   };
 }
 
+/**
+ * Mode-specific rendering config for the bottom metadata overlay and avatar fallback.
+ * Keeping these differences in a lookup table lets the template share a single DOM
+ * structure across `'always'` and `'hover'` modes without inline class conditionals.
+ */
 interface OverlayModeConfig {
+  /** Whether to render the bottom overlay container at all. */
   visible: boolean;
+  /** Offset/transition classes keeping fallback initials clear of the bottom scrim. */
   fallback: string;
+  /** Gradient stops and resting/hover visibility for the outer bottom scrim. */
   scrim: string;
+  /** Collapsible grid wrapper classes for the secondary Album + Date drawer. */
   details: string;
 }
 
 interface LovedModeConfig {
+  /** Whether to render the loved heart badge when `scrobble.loved` is true. */
   visible: boolean;
+  /** Resting/hover transition classes for the badge. */
   badge: string;
 }
 
 const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> = {
+  // Track + Artist sit over the scrim at rest; Album + Date expand from 0fr -> 1fr on hover/focus.
   always: {
     visible: true,
     fallback: 'pb-8',
@@ -34,6 +52,7 @@ const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> =
     details:
       'grid grid-rows-[0fr] opacity-0 transition-all duration-200 ease-out group-hover:grid-rows-[1fr] group-hover:opacity-100 group-focus-visible:grid-rows-[1fr] group-focus-visible:opacity-100',
   },
+  // Entire scrim (Track, Artist, Album, Date) starts hidden and slides up on hover/focus.
   hover: {
     visible: true,
     fallback:
@@ -55,6 +74,7 @@ const LOVED_MODE_CLASSES: Record<ScrobbleGridDisplayMode, LovedModeConfig> = {
     visible: true,
     badge: '',
   },
+  // Badge starts slightly above its resting position and slides down on hover/focus.
   hover: {
     visible: true,
     badge:
