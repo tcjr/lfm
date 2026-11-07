@@ -13,7 +13,7 @@ interface ScrobblesIndexSignature {
 }
 
 export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
-  @tracked view: ScrobbleView = 'by-day';
+  @tracked view: ScrobbleView = 'table'; // 'by-day';
 
   setView = (view: ScrobbleView): void => {
     this.view = view;
