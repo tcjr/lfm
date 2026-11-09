@@ -12,4 +12,12 @@ export default [
   { ignores: ['storybook-static/'] },
   ...ember.recommended(import.meta.dirname),
   ...templateLintMigration,
+  {
+    files: ['**/*.stories.{gjs,gts,js,ts}'],
+    rules: {
+      // Storybook's CSF Next uses `Story.extend({ args: { ... } })`, which is
+      // unrelated to EmberObject.extend().
+      'ember/avoid-leaking-state-in-ember-objects': 'off',
+    },
+  },
 ];

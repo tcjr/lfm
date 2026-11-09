@@ -13,7 +13,6 @@ const meta = preview.meta({
 
 export const Grid = meta.story();
 
-/* eslint-disable ember/avoid-leaking-state-in-ember-objects -- Storybook's CSF Next `.extend()`, not EmberObject.extend() */
 export const ByDay = Grid.extend({
   args: {
     value: 'by-day',
@@ -25,4 +24,3 @@ export const Table = Grid.extend({
     value: 'table',
   },
 });
-/* eslint-enable ember/avoid-leaking-state-in-ember-objects */
