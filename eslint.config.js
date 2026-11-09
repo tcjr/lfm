@@ -8,4 +8,8 @@
 import { ember } from 'ember-eslint';
 import templateLintMigration from 'eslint-plugin-ember/configs/template-lint-migration';
 
-export default [...ember.recommended(import.meta.dirname), ...templateLintMigration];
+export default [
+  { ignores: ['storybook-static/'] },
+  ...ember.recommended(import.meta.dirname),
+  ...templateLintMigration,
+];

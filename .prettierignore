@@ -3,6 +3,7 @@
 
 # compiled output
 /dist/
+/storybook-static/
 /tmp/
 /data/
 /public/data/
