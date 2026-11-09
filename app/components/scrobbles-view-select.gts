@@ -15,7 +15,7 @@ function handleChange(onChange: (view: ScrobbleView) => void): (event: Event) =>
   };
 }
 
-<template>
+const ScrobblesViewSelect: TOC<ScrobblesViewSelectSignature> = <template>
   <div class="mb-4">
     <label class="flex flex-col gap-1">
       <span class="label">View</span>
@@ -26,4 +26,6 @@ function handleChange(onChange: (view: ScrobbleView) => void): (event: Event) =>
       </select>
     </label>
   </div>
-</template> satisfies TOC<ScrobblesViewSelectSignature>;
+</template>;
+
+export default ScrobblesViewSelect;
