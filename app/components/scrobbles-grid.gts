@@ -107,7 +107,7 @@ function resolveLovedMode(mode: ScrobbleGridDisplayMode = 'always'): LovedModeCo
   return LOVED_MODE_CLASSES[mode];
 }
 
-<template>
+const ScrobblesGrid: TOC<ScrobblesGridSignature> = <template>
   {{#let (resolveOverlayMode @overlay) (resolveLovedMode @lovedIndicator) as |overlay loved|}}
     <div class="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
       {{#each @scrobbles as |scrobble|}}
@@ -182,4 +182,6 @@ function resolveLovedMode(mode: ScrobbleGridDisplayMode = 'always'): LovedModeCo
       {{/each}}
     </div>
   {{/let}}
-</template> satisfies TOC<ScrobblesGridSignature>;
+</template>;
+
+export default ScrobblesGrid;
