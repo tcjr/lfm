@@ -75,7 +75,6 @@ const meta = preview.meta({
 
 export const Default = meta.story();
 
-/* eslint-disable ember/avoid-leaking-state-in-ember-objects -- Storybook's CSF Next `.extend()`, not EmberObject.extend() */
 export const HoverOverlay = Default.extend({
   args: {
     overlay: 'hover',
@@ -95,4 +94,3 @@ export const FallbackInitials = Default.extend({
     scrobbles: FALLBACK_ONLY_SCROBBLES,
   },
 });
-/* eslint-enable ember/avoid-leaking-state-in-ember-objects */
