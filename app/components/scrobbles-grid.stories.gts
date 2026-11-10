@@ -75,21 +75,21 @@ const meta = preview.meta({
 
 export const Default = meta.story();
 
-export const HoverOverlay = Default.extend({
+export const HoverOverlay = meta.story({
   args: {
     overlay: 'hover',
     lovedIndicator: 'hover',
   },
 });
 
-export const ArtworkOnly = Default.extend({
+export const ArtworkOnly = meta.story({
   args: {
     overlay: 'none',
     lovedIndicator: 'none',
   },
 });
 
-export const FallbackInitials = Default.extend({
+export const FallbackInitials = meta.story({
   args: {
     scrobbles: FALLBACK_ONLY_SCROBBLES,
   },
