@@ -3,6 +3,8 @@ import { defineMain } from 'ember-storybook/node';
 export default defineMain({
   stories: ['../app/**/*.stories.g(j|t)s'],
 
+  addons: ['@storybook/addon-vitest'],
+
   framework: 'ember-storybook',
 
   core: {

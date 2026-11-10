@@ -1,8 +1,10 @@
-import { definePreview } from 'ember-storybook';
+import addonVitest from '@storybook/addon-vitest';
+import { definePreview, type EmberTypes } from 'ember-storybook';
 import { createStorybookApp } from '#app/app-storybook.ts';
+import type { EmberPreview } from '../types/ember-storybook.d.ts';
 
-export default definePreview({
-  addons: [],
+const preview: EmberPreview<EmberTypes> = definePreview({
+  addons: [addonVitest()],
   globalTypes: {
     theme: {
       description: 'DaisyUI color theme',
@@ -40,4 +42,7 @@ export default definePreview({
       },
     },
   },
+  tags: ['vitest'],
 });
+
+export default preview;
