@@ -1,7 +1,13 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { ember } from '@nullvoxpopuli/ember-vite';
 import { emberSsg } from 'vite-ember-ssr/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import { playwright } from '@vitest/browser-playwright';
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   build: {
@@ -17,16 +23,45 @@ export default defineConfig({
   },
   plugins: [
     ember(),
-    emberSsg({
-      // specify all paths to render during build
-      routes: [
-        'index', // special name for the root
-        'scrobbles',
-        'scrobbles/recent',
-      ],
-      ssrEntry: 'app/app-ssr',
-      // shoebox: true,
-    }),
+    ...(!process.env['VITEST']
+      ? [
+          emberSsg({
+            // specify all paths to render during build
+            routes: [
+              'index', // special name for the root
+              'scrobbles',
+              'scrobbles/recent',
+            ],
+            ssrEntry: 'app/app-ssr',
+            // shoebox: true,
+          }),
+        ]
+      : []),
     tailwindcss(),
   ],
+  test: {
+    projects: [
+      {
+        extends: true,
+        optimizeDeps: {
+          include: ['vite-ember-ssr/client'],
+        },
+        plugins: [
+          storybookTest({
+            configDir: path.join(dirname, '.storybook'),
+            storybookScript: 'pnpm storybook --no-open',
+          }),
+        ],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            provider: playwright({}),
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+    ],
+  },
 });
