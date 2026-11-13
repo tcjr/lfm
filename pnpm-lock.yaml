@@ -258,8 +258,8 @@ importers:
         specifier: ^9.2.0
         version: 9.2.0(@ember/test-helpers@5.8.0(@babel/core@7.29.13(supports-color@8.1.1)))(qunit@2.26.0)
       ember-storybook:
-        specifier: ^0.5.1
-        version: 0.5.1(@babel/core@7.29.13(supports-color@8.1.1))(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(react@19.3.1)(storybook@10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+        specifier: file:./vendor/ember-storybook-0.5.1.tgz
+        version: file:vendor/ember-storybook-0.5.1.tgz(@babel/core@7.29.13(supports-color@8.1.1))(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(react@19.3.1)(storybook@10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       eslint:
         specifier: ^10.14.0
         version: 10.14.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -3141,8 +3141,9 @@ packages:
     peerDependencies:
       '@glimmer/component': '>= 1.1.2'
 
-  ember-storybook@0.5.1:
-    resolution: {integrity: sha512-fNaz9Q/Zh9QXcWAaxUq8RgT9g/Z1SfOa+tIV6H8o8Q8U5QE2SRsBVkhHyRdE1wBamFkD9UHL9u5xloR6hHUr9A==}
+  ember-storybook@file:vendor/ember-storybook-0.5.1.tgz:
+    resolution: {integrity: sha512-bPZOvy9nicHXcmH1BVNlsGS2Z+SlqBbIGO++gZr+pIUhNbvPDovhHbMtw7ov++Lza4RFnu8dH1qfotBxv1eXow==, tarball: file:vendor/ember-storybook-0.5.1.tgz}
+    version: 0.5.1
     engines: {node: '>=24.0.0'}
     peerDependencies:
       storybook: ^10.0.0
@@ -8104,7 +8105,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ember-storybook@0.5.1(@babel/core@7.29.13(supports-color@8.1.1))(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(react@19.3.1)(storybook@10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)):
+  ember-storybook@file:vendor/ember-storybook-0.5.1.tgz(@babel/core@7.29.13(supports-color@8.1.1))(@types/react@19.3.0)(@typescript/typescript6@6.0.2)(react@19.3.1)(storybook@10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)):
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.3.0)(react@19.3.1)
       '@storybook/builder-vite': 10.6.6(storybook@10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1))(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
