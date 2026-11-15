@@ -23,6 +23,20 @@ export default defineConfig({
   },
   plugins: [
     ember(),
+
+    // // This works around a bug in embroider.
+    // {
+    //   name: 'workaround-embroider-resolver-serve-build-end',
+    //   configResolved(config) {
+    //     if (config.command === 'serve') {
+    //       const resolverPlugin = config.plugins.find((p) => p.name === 'embroider-resolver');
+    //       if (resolverPlugin) {
+    //         delete resolverPlugin.buildEnd;
+    //       }
+    //     }
+    //   },
+    // },
+
     ...(!process.env['VITEST']
       ? [
           emberSsg({
