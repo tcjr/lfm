@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@embroider/vite': file:./vendor/embroider-vite-1.8.0.tgz
+
 importers:
 
   .:
@@ -963,8 +966,9 @@ packages:
     resolution: {integrity: sha512-ZHTVF1Md6HiPPdpi5ESU5JlG2m4HRXIVebCka6BoMIfzyPlSjgYmpflv6Cmiq9UUyhe+/3LTMdx53vAV7O9g2Q==}
     engines: {node: 12.* || 14.* || >= 16}
 
-  '@embroider/vite@1.8.0':
-    resolution: {integrity: sha512-+g32mPMqLhrDaXks64dx1tt5jnI5Nbl6EojhJptSNBq3M+HHDS1dj+1kVjNmmpQwl0nId7ToGQZOr+Ykm19kNA==}
+  '@embroider/vite@file:vendor/embroider-vite-1.8.0.tgz':
+    resolution: {integrity: sha512-HjFP5vlTfHjuHtwM9U8Jwcb1tBrg3tL25zw4i7hWXE0vsYdknc26K8H5ny9Q/2LKiAEROoo+cOlUH0UtyE8EGg==, tarball: file:vendor/embroider-vite-1.8.0.tgz}
+    version: 1.8.0
     peerDependencies:
       '@babel/core': ^7.22.9 || ^8.0.0
       '@embroider/core': ^4.6.10
@@ -6347,7 +6351,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@embroider/vite@1.8.0(@babel/core@7.29.13(supports-color@8.1.1))(@embroider/core@4.6.10(@glint/template@1.11.1)(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))':
+  '@embroider/vite@file:vendor/embroider-vite-1.8.0.tgz(@babel/core@7.29.13(supports-color@8.1.1))(@embroider/core@4.6.10(@glint/template@1.11.1)(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))':
     dependencies:
       '@embroider/core': 4.6.10(@glint/template@1.11.1)(supports-color@8.1.1)
       '@embroider/macros': 1.21.4(@babel/core@7.29.13(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)
@@ -6695,7 +6699,7 @@ snapshots:
       '@babel/core': 7.29.13(supports-color@8.1.1)
       '@embroider/core': 4.6.10(@glint/template@1.11.1)(supports-color@8.1.1)
       '@embroider/macros': 1.21.4(@babel/core@7.29.13(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)
-      '@embroider/vite': 1.8.0(@babel/core@7.29.13(supports-color@8.1.1))(@embroider/core@4.6.10(@glint/template@1.11.1)(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
+      '@embroider/vite': file:vendor/embroider-vite-1.8.0.tgz(@babel/core@7.29.13(supports-color@8.1.1))(@embroider/core@4.6.10(@glint/template@1.11.1)(supports-color@8.1.1))(@glint/template@1.11.1)(supports-color@8.1.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))
       '@nullvoxpopuli/ember-build-tooling-utils': 1.2.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - '@glint/template'
