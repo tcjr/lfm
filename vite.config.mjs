@@ -9,6 +9,12 @@ import { playwright } from '@vitest/browser-playwright';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const browserProvider = playwright({
+  launchOptions: {
+    executablePath: process.env['CHROME_BIN'],
+  },
+});
+
 export default defineConfig({
   build: {
     rolldownOptions: {
@@ -62,7 +68,7 @@ export default defineConfig({
           include: ['{app,cli,shared}/**/*.{test,spec}.{js,ts,gjs,gts}'],
           browser: {
             enabled: true,
-            provider: playwright({}),
+            provider: browserProvider,
             headless: true,
             instances: [{ browser: 'chromium' }],
           },
@@ -83,7 +89,7 @@ export default defineConfig({
           name: 'storybook',
           browser: {
             enabled: true,
-            provider: playwright({}),
+            provider: browserProvider,
             headless: true,
             instances: [{ browser: 'chromium' }],
           },

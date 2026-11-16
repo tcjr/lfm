@@ -10,7 +10,7 @@ image: nixos
 dependencies:
   - nodejs_24
   - pnpm
-  - playwright-driver.browsers
+  - chromium
 
 environment:
   # Applies the bypass settings globally to all pnpm subcommands
@@ -26,5 +26,5 @@ steps:
     command: pnpm lint
   - name: 'Test'
     command: |
-      export PLAYWRIGHT_BROWSERS_PATH=$(nix path-info nixpkgs#playwright-driver.browsers)
+      export CHROME_BIN=$(which chromium)
       pnpm test:ci
