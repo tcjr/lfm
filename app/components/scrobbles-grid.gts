@@ -1,6 +1,6 @@
 import type { TOC } from '@ember/component/template-only';
 import type { ScrobbleRecord } from '#shared/types.ts';
-import { Avatar } from 'ember-primitives';
+import ScrobbleArtwork from './scrobble-artwork.gts';
 
 /**
  * Controls when a tile sub-element (metadata overlay or loved badge) is shown:
@@ -46,7 +46,7 @@ const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> =
   // Track + Artist sit over the scrim at rest; Album + Date expand from 0fr -> 1fr on hover/focus.
   always: {
     visible: true,
-    fallback: 'pb-8',
+    fallback: '[&_span]:pb-8',
     scrim:
       'from-black/85 via-black/50 transition-colors duration-200 group-hover:from-black/95 group-hover:via-black/70 group-focus-visible:from-black/95 group-focus-visible:via-black/70',
     details:
@@ -56,7 +56,7 @@ const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> =
   hover: {
     visible: true,
     fallback:
-      'transition-transform duration-200 group-hover:-translate-y-6 group-focus-visible:-translate-y-6',
+      '[&_span]:transition-transform [&_span]:duration-200 group-hover:[&_span]:-translate-y-6 group-focus-visible:[&_span]:-translate-y-6',
     scrim:
       'translate-y-2 from-black/95 via-black/70 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100',
     details: '',
@@ -95,10 +95,6 @@ function formatUts(uts: number): string {
   return dateFormatter.format(new Date(uts * 1000));
 }
 
-function formatFallbackText(scrobble: ScrobbleRecord): string {
-  return (scrobble.album || scrobble.artist || '??').slice(0, 2);
-}
-
 function resolveOverlayMode(mode: ScrobbleGridDisplayMode = 'always'): OverlayModeConfig {
   return OVERLAY_MODE_CLASSES[mode];
 }
@@ -115,21 +111,11 @@ const ScrobblesGrid: TOC<ScrobblesGridSignature> = <template>
           tabindex="0"
           class="group relative aspect-square rounded-xl overflow-hidden bg-base-200 shadow-sm ring-1 ring-base-content/10 transition-shadow duration-200 hover:shadow-md hover:ring-base-content/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <Avatar
-            @src="{{scrobble.imageUrl}}"
-            class="w-full h-full flex items-center justify-center overflow-hidden bg-base-300 text-base-content/50 text-3xl font-bold tracking-wider uppercase"
-            as |a|
-          >
-            <a.Image
-              alt={{scrobble.album}}
-              class="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 group-focus-visible:scale-105"
-            />
-            <a.Fallback>
-              <span class={{overlay.fallback}}>
-                {{formatFallbackText scrobble}}
-              </span>
-            </a.Fallback>
-          </Avatar>
+          <ScrobbleArtwork
+            @scrobble={{scrobble}}
+            class="size-full text-3xl [&_img]:transition-transform [&_img]:duration-300 [&_img]:ease-out group-hover:[&_img]:scale-105 group-focus-visible:[&_img]:scale-105
+              {{overlay.fallback}}"
+          />
 
           {{#if (and scrobble.loved loved.visible)}}
             <span
