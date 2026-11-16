@@ -17,5 +17,5 @@
       "extensions": [".gts", ".gjs"]
     }
   ],
-  "include": ["app", "types", ".storybook/**/*"]
+  "include": ["app", "types", ".storybook/**/*", "cli"]
 }
