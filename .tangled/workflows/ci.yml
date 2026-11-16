@@ -12,13 +12,12 @@ dependencies:
   - pnpm
   - playwright-driver.browsers
 
-
 environment:
   # Applies the bypass settings globally to all pnpm subcommands
   PNPM_CONFIG_PM_ON_FAIL: 'ignore'
   PNPM_CONFIG_SUPPORTED_ARCHITECTURES_LIBC: 'custom'
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-  PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: "true"
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: 'true'
 
 steps:
   - name: 'Install dependencies'
