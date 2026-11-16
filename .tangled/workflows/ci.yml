@@ -10,13 +10,15 @@ image: nixos
 dependencies:
   - nodejs_24
   - pnpm
-  - chromium
+  - playwright-driver.browsers
+
 
 environment:
-  CHROME_BIN: 'chromium'
   # Applies the bypass settings globally to all pnpm subcommands
   PNPM_CONFIG_PM_ON_FAIL: 'ignore'
   PNPM_CONFIG_SUPPORTED_ARCHITECTURES_LIBC: 'custom'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+  PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS: "true"
 
 steps:
   - name: 'Install dependencies'
@@ -24,4 +26,6 @@ steps:
   - name: 'Lint'
     command: pnpm lint
   - name: 'Test'
-    command: pnpm test:ci
+    command: |
+      export PLAYWRIGHT_BROWSERS_PATH=$(nix path-info nixpkgs#playwright-driver.browsers)
+      pnpm test:ci
