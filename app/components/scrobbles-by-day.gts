@@ -1,6 +1,6 @@
 import type { TOC } from '@ember/component/template-only';
 import type { ScrobbleRecord } from '#shared/types.ts';
-import { Avatar } from 'ember-primitives';
+import ScrobbleArtwork from './scrobble-artwork.gts';
 
 export interface ScrobblesByDaySignature {
   Args: {
@@ -57,10 +57,6 @@ function formatTime(uts: number): string {
   return timeFormatter.format(new Date(uts * 1000));
 }
 
-function formatFallbackText(scrobble: ScrobbleRecord) {
-  return (scrobble.album || scrobble.artist || '??').slice(0, 2);
-}
-
 <template>
   <div class="overflow-x-auto">
     <table class="table table-xs">
@@ -82,16 +78,7 @@ function formatFallbackText(scrobble: ScrobbleRecord) {
           {{#each group.scrobbles as |scrobble|}}
             <tr>
               <td>
-                <Avatar
-                  @src="{{scrobble.imageUrl}}"
-                  class="w-10 h-10 flex items-center place-content-center overflow-hidden"
-                  as |a|
-                >
-                  <a.Image alt={{scrobble.album}} class="w-full h-full" />
-                  <a.Fallback>
-                    {{formatFallbackText scrobble}}
-                  </a.Fallback>
-                </Avatar>
+                <ScrobbleArtwork @scrobble={{scrobble}} class="size-10" />
               </td>
               <td>{{scrobble.track}}</td>
               <td>{{scrobble.artist}}</td>

@@ -278,6 +278,9 @@ importers:
       prettier-plugin-ember-template-tag:
         specifier: ^2.1.8
         version: 2.1.8(prettier@3.9.10)(supports-color@8.1.1)
+      reactiveweb:
+        specifier: ^1.9.4
+        version: 1.9.4(@babel/core@7.29.13(supports-color@8.1.1))(@ember/test-waiters@4.1.2)(@glimmer/component@2.2.1)(@glint/template@1.11.1)
       storybook:
         specifier: ^10.6.6
         version: 10.6.6(@types/react@19.3.0)(prettier@3.9.10)(react@19.3.1)
