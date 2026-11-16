@@ -4,7 +4,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const macros = buildMacros({
   configure(config) {
-    if (process.env.EMBER_ENV === 'test') {
+    if (process.env.EMBER_ENV === 'test' || Boolean(process.env.VITEST)) {
       config.enableRuntimeMode();
     }
   },

@@ -124,4 +124,4 @@ This project uses TypeScript 7 and [ember-content-mapper](https://github.com/Nul
 
 - `pnpm lint` - Run ESLint, Prettier, and TypeScript checks
 - `pnpm lint:fix` - Auto-fix lint and formatting issues
-- `pnpm test` - Build and run QUnit tests
+- `pnpm test` - Run Vitest unit and Storybook component tests

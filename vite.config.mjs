@@ -57,6 +57,19 @@ export default defineConfig({
     projects: [
       {
         extends: true,
+        test: {
+          name: 'unit',
+          include: ['{app,cli,shared}/**/*.{test,spec}.{js,ts,gjs,gts}'],
+          browser: {
+            enabled: true,
+            provider: playwright({}),
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
+        extends: true,
         optimizeDeps: {
           include: ['vite-ember-ssr/client'],
         },

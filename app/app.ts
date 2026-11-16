@@ -18,14 +18,35 @@ export default class App extends Application {
     './services/page-title': EmberPageTitleService,
 
     ...import.meta.glob('./router.*', { eager: true }),
-    ...import.meta.glob(['./routes/**/*', '!./routes/**/*.stories.{gjs,gts,js,ts}'], {
-      eager: true,
-    }),
-    ...import.meta.glob(['./templates/**/*', '!./templates/**/*.stories.{gjs,gts,js,ts}'], {
-      eager: true,
-    }),
-    ...import.meta.glob(['./services/**/*', '!./services/**/*.stories.{gjs,gts,js,ts}'], {
-      eager: true,
-    }),
+    ...import.meta.glob(
+      [
+        './routes/**/*',
+        '!./routes/**/*.stories.{gjs,gts,js,ts}',
+        '!./routes/**/*.{test,spec}.{gjs,gts,js,ts}',
+      ],
+      {
+        eager: true,
+      },
+    ),
+    ...import.meta.glob(
+      [
+        './templates/**/*',
+        '!./templates/**/*.stories.{gjs,gts,js,ts}',
+        '!./templates/**/*.{test,spec}.{gjs,gts,js,ts}',
+      ],
+      {
+        eager: true,
+      },
+    ),
+    ...import.meta.glob(
+      [
+        './services/**/*',
+        '!./services/**/*.stories.{gjs,gts,js,ts}',
+        '!./services/**/*.{test,spec}.{gjs,gts,js,ts}',
+      ],
+      {
+        eager: true,
+      },
+    ),
   };
 }
