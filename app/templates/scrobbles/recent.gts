@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import ScrobblesByDay from '#components/scrobbles-by-day.gts';
-import ScrobblesGrid from '#components/scrobbles-grid.gts';
+import ScrobblesGridByDay from '#components/scrobbles-grid-by-day.gts';
 import ScrobblesTable from '#components/scrobbles-table.gts';
 import ScrobblesViewSelect, { type ScrobbleView } from '#components/scrobbles-view-select.gts';
 import type { ScrobbleRecord } from '#shared/types.ts';
@@ -24,7 +24,7 @@ export default class ScrobblesRecent extends Component<ScrobblesRecentSignature>
 
     {{#if @model.length}}
       {{#if (eq this.view "grid")}}
-        <ScrobblesGrid @scrobbles={{@model}} @overlay="always" @lovedIndicator="always" />
+        <ScrobblesGridByDay @scrobbles={{@model}} @overlay="always" @lovedIndicator="always" />
       {{else if (eq this.view "table")}}
         <ScrobblesTable @scrobbles={{@model}} />
       {{else if (eq this.view "by-day")}}

@@ -2,7 +2,7 @@ import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import ScrobblesByDay from '#components/scrobbles-by-day.gts';
 import ScrobblesDateRangeSlider from '#components/scrobbles-date-range-slider.gts';
-import ScrobblesGrid from '#components/scrobbles-grid.gts';
+import ScrobblesGridByDay from '#components/scrobbles-grid-by-day.gts';
 import ScrobblesTable from '#components/scrobbles-table.gts';
 import ScrobblesViewSelect, { type ScrobbleView } from '#components/scrobbles-view-select.gts';
 import type { ScrobbleSnapshot } from '#shared/types.ts';
@@ -27,7 +27,7 @@ export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
       {{#if isValid}}
         {{#if filtered}}
           {{#if (eq this.view "grid")}}
-            <ScrobblesGrid @scrobbles={{filtered}} @overlay="always" @lovedIndicator="hover" />
+            <ScrobblesGridByDay @scrobbles={{filtered}} @overlay="always" @lovedIndicator="hover" />
           {{else if (eq this.view "table")}}
             <ScrobblesTable @scrobbles={{filtered}} />
           {{else if (eq this.view "by-day")}}
