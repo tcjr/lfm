@@ -1,9 +1,9 @@
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import ScrobblesByDay from '#components/scrobbles-by-day.gts';
 import ScrobblesDateRangeSlider from '#components/scrobbles-date-range-slider.gts';
 import ScrobblesGridByDay from '#components/scrobbles-grid-by-day.gts';
 import ScrobblesTable from '#components/scrobbles-table.gts';
+import ScrobblesTableByDay from '#components/scrobbles-table-by-day.gts';
 import ScrobblesViewSelect, { type ScrobbleView } from '#components/scrobbles-view-select.gts';
 import type { ScrobbleSnapshot } from '#shared/types.ts';
 import ScrobblesGrid from '#components/scrobbles-grid.gts';
@@ -56,9 +56,13 @@ export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
               <ScrobblesGrid @scrobbles={{filtered}} @overlay="always" @lovedIndicator="hover" />
             {{/if}}
           {{else if (eq this.view "table")}}
-            <ScrobblesTable @scrobbles={{filtered}} />
+            {{#if (eq this.grouping "day")}}
+              <ScrobblesTableByDay @scrobbles={{filtered}} />
+            {{else}}
+              <ScrobblesTable @scrobbles={{filtered}} />
+            {{/if}}
           {{else if (eq this.view "by-day")}}
-            <ScrobblesByDay @scrobbles={{filtered}} />
+            <ScrobblesTableByDay @scrobbles={{filtered}} />
           {{/if}}
         {{else}}
           <p class="text-base-content/70">No scrobbles match this date range.</p>
