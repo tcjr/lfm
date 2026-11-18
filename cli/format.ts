@@ -21,20 +21,40 @@ export function artistName(
   return value?.name ?? value?.['#text'] ?? 'Unknown artist';
 }
 
-/** Pick the largest non-empty image URL. */
+/** Last.fm's generic "star" placeholder image hash returned when artwork is missing. */
+export const LASTFM_PLACEHOLDER_IMAGE_HASH = '2a96cbd8b46e442fc41c2b86b821562f';
+
+/** Check whether an image URL points to Last.fm's default star placeholder image. */
+export function isPlaceholderImageUrl(url: string | undefined): boolean {
+  return Boolean(url?.includes(LASTFM_PLACEHOLDER_IMAGE_HASH));
+}
+
+/** Check whether a Last.fm image array contains at least one placeholder image URL. */
+export function hasPlaceholderImage(images: LastfmImage[] | undefined): boolean {
+  if (!images?.length) {
+    return false;
+  }
+  return images.some((image) => isPlaceholderImageUrl(image['#text']));
+}
+
+function isUsableImage(image: LastfmImage): boolean {
+  return Boolean(image['#text']) && !isPlaceholderImageUrl(image['#text']);
+}
+
+/** Pick the largest non-empty, non-placeholder image URL. */
 export function bestImage(images: LastfmImage[] | undefined): string | undefined {
   if (!images?.length) {
     return undefined;
   }
 
   for (const size of ['mega', 'extralarge', 'large', 'medium', 'small']) {
-    const match = images.find((image) => image.size === size && image['#text']);
+    const match = images.find((image) => image.size === size && isUsableImage(image));
     if (match) {
       return match['#text'];
     }
   }
 
-  return images.find((image) => image['#text'])?.['#text'];
+  return images.find(isUsableImage)?.['#text'];
 }
 
 export function formatCount(value: string | number | undefined): string {

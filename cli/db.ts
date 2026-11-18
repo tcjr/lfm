@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { artistName, bestImage } from './format.ts';
+import { artistName, bestImage, hasPlaceholderImage, isPlaceholderImageUrl } from './format.ts';
 import type { ScrobbleRecord, ScrobbleSnapshot, Track } from '#shared/types.ts';
 
 export const DEFAULT_DB_PATH = 'data/lastfm.db';
@@ -47,7 +47,7 @@ export function upsertTracks(
   db: DatabaseSync,
   user: string,
   tracks: Track[],
-): { stored: number; skippedNowPlaying: number } {
+): { stored: number; skippedNowPlaying: number; placeholdersReplaced: number } {
   const normalizedUser = user.toLowerCase();
   const stmt = db.prepare(`
     INSERT INTO scrobbles (
@@ -67,6 +67,7 @@ export function upsertTracks(
 
   let stored = 0;
   let skippedNowPlaying = 0;
+  let placeholdersReplaced = 0;
 
   db.exec('BEGIN');
   try {
@@ -89,6 +90,9 @@ export function upsertTracks(
       const trackMbid = track.mbid ?? '';
       const loved = track.loved === '1' ? 1 : 0;
       const imageUrl = bestImage(track.image) ?? '';
+      if (!imageUrl && hasPlaceholderImage(track.image)) {
+        placeholdersReplaced++;
+      }
 
       stmt.run(
         normalizedUser,
@@ -111,7 +115,7 @@ export function upsertTracks(
     throw error;
   }
 
-  return { stored, skippedNowPlaying };
+  return { stored, skippedNowPlaying, placeholdersReplaced };
 }
 
 export function getScrobbleBounds(
@@ -141,11 +145,15 @@ export function getStoredUser(db: DatabaseSync): string | undefined {
   return row?.user;
 }
 
+export interface ExportSnapshotResult extends ScrobbleSnapshot {
+  placeholdersReplaced: number;
+}
+
 export function exportSnapshot(
   db: DatabaseSync,
   user: string,
   exportPath = DEFAULT_EXPORT_PATH,
-): ScrobbleSnapshot {
+): ExportSnapshotResult {
   const normalizedUser = user.toLowerCase();
   const rows = db
     .prepare(
@@ -156,17 +164,26 @@ export function exportSnapshot(
     )
     .all(normalizedUser) as unknown as ScrobbleRow[];
 
-  const scrobbles: ScrobbleRecord[] = rows.map((row) => ({
-    uts: row.uts,
-    track: row.track,
-    artist: row.artist,
-    album: row.album,
-    ...(row.track_mbid ? { trackMbid: row.track_mbid } : {}),
-    ...(row.artist_mbid ? { artistMbid: row.artist_mbid } : {}),
-    ...(row.album_mbid ? { albumMbid: row.album_mbid } : {}),
-    loved: row.loved === 1,
-    ...(row.image_url ? { imageUrl: row.image_url } : {}),
-  }));
+  let placeholdersReplaced = 0;
+  const scrobbles: ScrobbleRecord[] = rows.map((row) => {
+    const isPlaceholder = isPlaceholderImageUrl(row.image_url);
+    if (isPlaceholder) {
+      placeholdersReplaced++;
+    }
+    const imageUrl = row.image_url && !isPlaceholder ? row.image_url : undefined;
+
+    return {
+      uts: row.uts,
+      track: row.track,
+      artist: row.artist,
+      album: row.album,
+      ...(row.track_mbid ? { trackMbid: row.track_mbid } : {}),
+      ...(row.artist_mbid ? { artistMbid: row.artist_mbid } : {}),
+      ...(row.album_mbid ? { albumMbid: row.album_mbid } : {}),
+      loved: row.loved === 1,
+      ...(imageUrl ? { imageUrl } : {}),
+    };
+  });
 
   const snapshot: ScrobbleSnapshot = {
     user: normalizedUser,
@@ -177,5 +194,5 @@ export function exportSnapshot(
 
   mkdirSync(dirname(exportPath), { recursive: true });
   writeFileSync(exportPath, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
-  return snapshot;
+  return { ...snapshot, placeholdersReplaced };
 }

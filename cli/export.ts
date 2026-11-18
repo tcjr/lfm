@@ -27,6 +27,11 @@ if (!user) {
 }
 
 const snapshot = exportSnapshot(db, user, values.out);
+if (snapshot.placeholdersReplaced > 0) {
+  console.log(
+    `Replaced ${snapshot.placeholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s) with empty artwork.`,
+  );
+}
 console.log(
   `Exported ${snapshot.count.toLocaleString()} scrobbles for "${snapshot.user}" to ${values.out}`,
 );

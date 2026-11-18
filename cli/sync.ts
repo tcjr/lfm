@@ -87,6 +87,7 @@ const client = createClient();
 let page = 1;
 let totalPages = 1;
 let fetchedTracks = 0;
+let syncedPlaceholdersReplaced = 0;
 
 while (page <= totalPages) {
   const response = await userRecentTracks(client, user, {
@@ -102,26 +103,35 @@ while (page <= totalPages) {
   const rawTracks = response.recenttracks.track;
   const tracks = Array.isArray(rawTracks) ? rawTracks : rawTracks ? [rawTracks] : [];
 
-  const { stored } = upsertTracks(db, user, tracks);
+  const { stored, placeholdersReplaced } = upsertTracks(db, user, tracks);
   fetchedTracks += stored;
+  syncedPlaceholdersReplaced += placeholdersReplaced;
 
   if (Number(attr.totalPages) === 0 || tracks.length === 0) {
     console.log('No new scrobbles in this window.');
     break;
   }
 
+  const placeholderNote =
+    placeholdersReplaced > 0 ? `, replaced ${placeholdersReplaced} placeholder image(s)` : '';
   console.log(
-    `  Page ${page}/${totalPages}: stored ${stored} scrobbles (running total: ${fetchedTracks})`,
+    `  Page ${page}/${totalPages}: stored ${stored} scrobbles${placeholderNote} (running total: ${fetchedTracks})`,
   );
   page++;
 }
 
 const bounds = getScrobbleBounds(db, user);
 const snapshot = exportSnapshot(db, user, values.out);
+const totalPlaceholdersReplaced = syncedPlaceholdersReplaced + snapshot.placeholdersReplaced;
 
 console.log(
   [
     `Sync complete: ${bounds.count.toLocaleString()} total scrobbles in ${values.db}.`,
+    ...(totalPlaceholdersReplaced > 0
+      ? [
+          `Replaced ${totalPlaceholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s) with empty artwork.`,
+        ]
+      : []),
     `Exported front-end snapshot to ${values.out} (${snapshot.count.toLocaleString()} scrobbles).`,
   ].join('\n'),
 );
