@@ -1,6 +1,6 @@
 import type { TOC } from '@ember/component/template-only';
 
-export type ScrobbleView = 'grid' | 'by-day' | 'table';
+export type ScrobbleView = 'grid' | 'table';
 
 export interface ScrobblesViewSelectSignature {
   Args: {
@@ -21,7 +21,6 @@ const ScrobblesViewSelect: TOC<ScrobblesViewSelectSignature> = <template>
       <span class="label">View</span>
       <select class="select w-full sm:w-44" {{on "change" (handleChange @onChange)}}>
         <option value="grid" selected={{eq "grid" @value}}>Grid</option>
-        <option value="by-day" selected={{eq "by-day" @value}}>By day</option>
         <option value="table" selected={{eq "table" @value}}>Table</option>
       </select>
     </label>

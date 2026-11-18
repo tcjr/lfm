@@ -61,8 +61,6 @@ export default class ScrobblesIndex extends Component<ScrobblesIndexSignature> {
             {{else}}
               <ScrobblesTable @scrobbles={{filtered}} />
             {{/if}}
-          {{else if (eq this.view "by-day")}}
-            <ScrobblesTableByDay @scrobbles={{filtered}} />
           {{/if}}
         {{else}}
           <p class="text-base-content/70">No scrobbles match this date range.</p>

@@ -20,11 +20,7 @@ Grid.test('selects the Grid option by default and lists all view options', async
 
   const options = canvas.getAllByRole('option');
 
-  await expect(options.map((option) => option.textContent?.trim())).toEqual([
-    'Grid',
-    'By day',
-    'Table',
-  ]);
+  await expect(options.map((option) => option.textContent?.trim())).toEqual(['Grid', 'Table']);
 });
 
 Grid.test(
@@ -32,29 +28,8 @@ Grid.test(
   async ({ canvas, userEvent, args }) => {
     const select = canvas.getByRole('combobox', { name: 'View' });
 
-    await userEvent.selectOptions(select, 'by-day');
-    await expect(args.onChange).toHaveBeenCalledWith('by-day');
-
     await userEvent.selectOptions(select, 'table');
     await expect(args.onChange).toHaveBeenCalledWith('table');
-  },
-);
-
-export const ByDay = Grid.extend({
-  args: {
-    value: 'by-day',
-  },
-});
-
-ByDay.test(
-  'preselects the "By day" option and notifies onChange when switching back to Grid',
-  async ({ canvas, userEvent, args }) => {
-    const select = canvas.getByRole('combobox', { name: 'View' });
-
-    await expect(select).toHaveValue('by-day');
-
-    await userEvent.selectOptions(select, 'grid');
-    await expect(args.onChange).toHaveBeenCalledWith('grid');
   },
 );
 
@@ -64,8 +39,14 @@ export const Table = Grid.extend({
   },
 });
 
-Table.test('preselects the "Table" option', async ({ canvas }) => {
-  const select = canvas.getByRole('combobox', { name: 'View' });
+Table.test(
+  'preselects the "Table" option and notifies onChange when switching back to Grid',
+  async ({ canvas, userEvent, args }) => {
+    const select = canvas.getByRole('combobox', { name: 'View' });
 
-  await expect(select).toHaveValue('table');
-});
+    await expect(select).toHaveValue('table');
+
+    await userEvent.selectOptions(select, 'grid');
+    await expect(args.onChange).toHaveBeenCalledWith('grid');
+  },
+);
