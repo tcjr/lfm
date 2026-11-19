@@ -9,8 +9,14 @@ import {
 import { LastfmError, type LastfmClient } from './client.ts';
 import { trackInfo, trackInfoByMbid } from './endpoints.ts';
 import { bestImage, LASTFM_PLACEHOLDER_IMAGE_HASH } from './format.ts';
+import {
+  ItunesError,
+  pickBestItunesMatch,
+  type ItunesMatch,
+  type ItunesSearchClient,
+} from './itunes.ts';
 
-export const ENRICH_SOURCES = ['self', 'lastfm-track'] as const;
+export const ENRICH_SOURCES = ['self', 'lastfm-track', 'itunes'] as const;
 
 export type EnrichSource = (typeof ENRICH_SOURCES)[number];
 
@@ -164,7 +170,7 @@ export async function lookupLastfmTrackArtwork(
  *
  * - Queries `(artist, track)` with `autocorrect=1` first, falling back to `track_mbid` on a clean miss.
  * - Always stores overrides under the scrobble's original `(artist, '', track)` key.
- * - Caches clean misses as `source = 'not_found'` (`image_url = ''`) unless an existing non-empty override exists.
+ * - Does not cache `not_found` because downstream tiers (such as `itunes`) can still resolve album-less tracks.
  * - Persists each resolved row incrementally when `dryRun` is false.
  */
 export async function enrichLastfmTrackArtwork(
@@ -323,7 +329,7 @@ export async function enrichLastfmTrackArtwork(
           matchedVia: lookup.matchedVia,
         };
       } else if (existing && existing.imageUrl !== '') {
-        // Never downgrade an existing non-empty override to `not_found`, even under `--force`.
+        // Never downgrade an existing non-empty override, even under `--force`.
         keptExisting++;
         outcome = {
           artist: candidate.artist,
@@ -333,16 +339,7 @@ export async function enrichLastfmTrackArtwork(
           imageUrl: existing.imageUrl,
         };
       } else {
-        if (!dryRun) {
-          upsertArtworkOverride(db, {
-            artist: candidate.artist,
-            album: '',
-            track: candidate.track,
-            imageUrl: '',
-            source: 'not_found',
-            updatedAt: nowSeconds(),
-          });
-        }
+        // Defer `not_found` caching to the final tier (`itunes`) so downstream sources can still try.
         notFound++;
         outcome = {
           artist: candidate.artist,
@@ -360,6 +357,324 @@ export async function enrichLastfmTrackArtwork(
       const errorMessage = error instanceof Error ? error.message : String(error);
       outcome = {
         artist: candidate.artist,
+        track: candidate.track,
+        matchCount: candidate.matchCount,
+        status: 'error',
+        errorMessage,
+      };
+    }
+
+    outcomes.push(outcome);
+    options.onProgress?.({
+      index: i + 1,
+      total: queue.length,
+      outcome,
+    });
+  }
+
+  return {
+    outcomes,
+    totalEligible: eligible.length,
+    queried: queue.length,
+    inserted,
+    updated,
+    notFound,
+    keptExisting,
+    errors,
+    skippedManual,
+    skippedExisting,
+    skippedNotFound,
+    skippedResolvedInRun,
+    dryRun,
+  };
+}
+
+export interface ItunesArtworkCandidate {
+  artist: string;
+  album: string;
+  track: string;
+  matchCount: number;
+  lastScrobbledAt: number;
+}
+
+export type ItunesOutcomeStatus = 'inserted' | 'updated' | 'not-found' | 'kept-existing' | 'error';
+
+export interface ItunesArtworkOutcome {
+  artist: string;
+  album: string;
+  track: string;
+  matchCount: number;
+  status: ItunesOutcomeStatus;
+  imageUrl?: string;
+  matchedArtist?: string;
+  matchedTitle?: string;
+  errorMessage?: string;
+}
+
+export interface ItunesProgressEvent {
+  index: number;
+  total: number;
+  outcome: ItunesArtworkOutcome;
+}
+
+export interface EnrichItunesOptions {
+  user?: string;
+  limit?: number;
+  dryRun?: boolean;
+  force?: boolean;
+  retryNotFound?: boolean;
+  excludeKeys?: ReadonlySet<string>;
+  nowSeconds?: () => number;
+  onProgress?: (event: ItunesProgressEvent) => void;
+}
+
+export interface ItunesEnrichResult {
+  outcomes: ItunesArtworkOutcome[];
+  totalEligible: number;
+  queried: number;
+  inserted: number;
+  updated: number;
+  notFound: number;
+  keptExisting: number;
+  errors: number;
+  skippedManual: number;
+  skippedExisting: number;
+  skippedNotFound: number;
+  skippedResolvedInRun: number;
+  dryRun: boolean;
+}
+
+interface MissingScrobbleRow {
+  uts: number;
+  artist: string;
+  album: string;
+  track: string;
+}
+
+export async function lookupItunesArtwork(
+  client: ItunesSearchClient,
+  target: { artist: string; album: string; track: string },
+): Promise<ItunesMatch | undefined> {
+  const isAlbum = target.album.trim() !== '';
+  const term = isAlbum
+    ? `${target.artist.trim()} ${target.album.trim()}`
+    : `${target.artist.trim()} ${target.track.trim()}`;
+
+  const response = await client.search({
+    term,
+    entity: isAlbum ? 'album' : 'song',
+    limit: 10,
+  });
+
+  return pickBestItunesMatch(response.results, target);
+}
+
+/**
+ * Tier 3 (final) automated enrichment: query Apple's iTunes Search API for
+ * missing named albums (`entity=album`) and unresolved album-less tracks (`entity=song`).
+ *
+ * - Validates results using strict normalized artist + title matching.
+ * - Upgrades returned `artworkUrl100` to `600x600bb`.
+ * - Persists resolved overrides (`source = 'itunes'`) and clean misses (`source = 'not_found'`) incrementally.
+ * - Never downgrades an existing non-empty override to `not_found`, even under `--force`.
+ * - Aborts immediately on sustained rate limiting (`403`/`429`) while keeping earlier writes.
+ */
+export async function enrichItunesArtwork(
+  db: DatabaseSync,
+  client: ItunesSearchClient,
+  options: EnrichItunesOptions = {},
+): Promise<ItunesEnrichResult> {
+  const dryRun = options.dryRun ?? false;
+  const force = options.force ?? false;
+  const retryNotFound = options.retryNotFound ?? false;
+  const excludeKeys = options.excludeKeys;
+  const nowSeconds = options.nowSeconds ?? (() => Math.floor(Date.now() / 1000));
+  const placeholderPattern = `%${LASTFM_PLACEHOLDER_IMAGE_HASH}%`;
+
+  const rows = (options.user
+    ? db
+        .prepare(
+          `SELECT uts, artist, album, track
+             FROM scrobbles
+             WHERE user = ? AND (image_url = '' OR image_url LIKE ?)
+             ORDER BY uts DESC`,
+        )
+        .all(options.user.toLowerCase(), placeholderPattern)
+    : db
+        .prepare(
+          `SELECT uts, artist, album, track
+             FROM scrobbles
+             WHERE image_url = '' OR image_url LIKE ?
+             ORDER BY uts DESC`,
+        )
+        .all(placeholderPattern)) as unknown as MissingScrobbleRow[];
+
+  const grouped = new Map<string, ItunesArtworkCandidate>();
+  for (const row of rows) {
+    const artist = row.artist.trim();
+    const album = row.album.trim();
+    const track = album ? '' : row.track.trim();
+    if (!artist || (!album && !track)) {
+      continue;
+    }
+
+    const key = overrideMapKey(artist, album, track);
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.matchCount++;
+      if (row.uts > existing.lastScrobbledAt) {
+        existing.lastScrobbledAt = row.uts;
+      }
+    } else {
+      grouped.set(key, {
+        artist,
+        album,
+        track,
+        matchCount: 1,
+        lastScrobbledAt: row.uts,
+      });
+    }
+  }
+
+  const orderedCandidates = [...grouped.values()].sort(
+    (a, b) =>
+      b.matchCount - a.matchCount ||
+      b.lastScrobbledAt - a.lastScrobbledAt ||
+      a.artist.localeCompare(b.artist) ||
+      a.album.localeCompare(b.album) ||
+      a.track.localeCompare(b.track),
+  );
+
+  const existingOverrides = buildArtworkOverrideIndex(listArtworkOverrides(db));
+  const eligible: Array<{ candidate: ItunesArtworkCandidate; existing?: ArtworkOverride }> = [];
+
+  let skippedManual = 0;
+  let skippedExisting = 0;
+  let skippedNotFound = 0;
+  let skippedResolvedInRun = 0;
+
+  for (const candidate of orderedCandidates) {
+    const key = overrideMapKey(candidate.artist, candidate.album, candidate.track);
+    if (excludeKeys?.has(key)) {
+      skippedResolvedInRun++;
+      continue;
+    }
+
+    const existing = existingOverrides.get(key);
+    if (existing?.source === 'manual') {
+      skippedManual++;
+      continue;
+    }
+
+    if (existing?.source === 'not_found') {
+      if (!retryNotFound && !force) {
+        skippedNotFound++;
+        continue;
+      }
+      eligible.push({ candidate, existing });
+      continue;
+    }
+
+    if (existing && existing.imageUrl !== '') {
+      if (!force) {
+        skippedExisting++;
+        continue;
+      }
+      eligible.push({ candidate, existing });
+      continue;
+    }
+
+    eligible.push({ candidate, existing });
+  }
+
+  const queue =
+    options.limit !== undefined && options.limit > 0 ? eligible.slice(0, options.limit) : eligible;
+
+  const outcomes: ItunesArtworkOutcome[] = [];
+  let inserted = 0;
+  let updated = 0;
+  let notFound = 0;
+  let keptExisting = 0;
+  let errors = 0;
+
+  for (let i = 0; i < queue.length; i++) {
+    const { candidate, existing } = queue[i]!;
+    let outcome: ItunesArtworkOutcome;
+
+    try {
+      const match = await lookupItunesArtwork(client, {
+        artist: candidate.artist,
+        album: candidate.album,
+        track: candidate.track,
+      });
+
+      if (match) {
+        const status: ItunesOutcomeStatus = existing ? 'updated' : 'inserted';
+        if (!dryRun) {
+          upsertArtworkOverride(db, {
+            artist: candidate.artist,
+            album: candidate.album,
+            track: candidate.track,
+            imageUrl: match.imageUrl,
+            source: 'itunes',
+            updatedAt: nowSeconds(),
+          });
+        }
+        if (status === 'updated') {
+          updated++;
+        } else {
+          inserted++;
+        }
+        outcome = {
+          artist: candidate.artist,
+          album: candidate.album,
+          track: candidate.track,
+          matchCount: candidate.matchCount,
+          status,
+          imageUrl: match.imageUrl,
+          matchedArtist: match.matchedArtist,
+          matchedTitle: match.matchedTitle,
+        };
+      } else if (existing && existing.imageUrl !== '') {
+        keptExisting++;
+        outcome = {
+          artist: candidate.artist,
+          album: candidate.album,
+          track: candidate.track,
+          matchCount: candidate.matchCount,
+          status: 'kept-existing',
+          imageUrl: existing.imageUrl,
+        };
+      } else {
+        if (!dryRun) {
+          upsertArtworkOverride(db, {
+            artist: candidate.artist,
+            album: candidate.album,
+            track: candidate.track,
+            imageUrl: '',
+            source: 'not_found',
+            updatedAt: nowSeconds(),
+          });
+        }
+        notFound++;
+        outcome = {
+          artist: candidate.artist,
+          album: candidate.album,
+          track: candidate.track,
+          matchCount: candidate.matchCount,
+          status: 'not-found',
+        };
+      }
+    } catch (error) {
+      if (error instanceof ItunesError && error.rateLimited) {
+        throw error;
+      }
+
+      errors++;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      outcome = {
+        artist: candidate.artist,
+        album: candidate.album,
         track: candidate.track,
         matchCount: candidate.matchCount,
         status: 'error',

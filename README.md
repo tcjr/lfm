@@ -46,11 +46,11 @@ pnpm sync -- --from 2026-01-01         # backfill from an ISO date or unix times
 pnpm export                            # regenerate public/data/scrobbles.json offline from SQLite
 pnpm backup                            # save a timestamped SQLite backup in data/
 pnpm artwork missing                   # list scrobbles missing artwork after overrides
-pnpm artwork enrich --dry-run          # preview DB self-healing + Last.fm track.getInfo enrichment
-pnpm artwork enrich                    # run all enrichment tiers (self -> lastfm-track)
+pnpm artwork enrich --dry-run          # preview all enrichment tiers (self -> lastfm-track -> itunes)
+pnpm artwork enrich                    # run all enrichment tiers (self -> lastfm-track -> itunes)
 pnpm artwork enrich --source self      # offline DB self-healing only (no API calls)
-pnpm artwork enrich --source lastfm-track --limit 10  # query up to 10 album-less tracks on Last.fm
-pnpm artwork enrich --retry-not-found  # re-query tracks previously cached as not_found
+pnpm artwork enrich --source itunes --limit 10  # query up to 10 missing albums/tracks on iTunes
+pnpm artwork enrich --retry-not-found  # re-query items previously cached as not_found
 pnpm artwork set --artist "Aphex Twin" --album "SAW 85-92" --url "https://..."
 pnpm artwork list                      # inspect stored artwork overrides
 pnpm artwork remove --rowid 1          # remove an override by rowid (or --artist/--album/--track)

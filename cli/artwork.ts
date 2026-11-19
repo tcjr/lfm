@@ -1,8 +1,10 @@
-import { parseArgs } from 'node:util';
+import { parseArgs, styleText } from 'node:util';
 import {
   ENRICH_SOURCES,
+  enrichItunesArtwork,
   enrichLastfmTrackArtwork,
   parseEnrichSources,
+  type ItunesProgressEvent,
   type LastfmTrackProgressEvent,
 } from './artwork-enrich.ts';
 import {
@@ -18,6 +20,7 @@ import {
 } from './artwork-overrides.ts';
 import { createClient, loadEnv } from './config.ts';
 import { DEFAULT_DB_PATH, getStoredUser, openDatabase } from './db.ts';
+import { ItunesClient } from './itunes.ts';
 
 loadEnv();
 
@@ -308,6 +311,10 @@ function runMissing(args: string[]): void {
   }
 }
 
+function printSectionHeading(title: string, color: 'cyan' | 'magenta' | 'blue'): void {
+  console.log(`\n${styleText(['bold', color], title)}`);
+}
+
 function formatLastfmProgress(event: LastfmTrackProgressEvent, dryRun: boolean): string {
   const { index, total, outcome } = event;
   const label = `[${index}/${total}] ${outcome.artist} — ${outcome.track}`;
@@ -317,6 +324,23 @@ function formatLastfmProgress(event: LastfmTrackProgressEvent, dryRun: boolean):
     case 'inserted':
     case 'updated':
       return `${dryRun ? '[dry-run] ' : ''}${label} -> found${via} (${outcome.imageUrl})`;
+    case 'not-found':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> not found`;
+    case 'kept-existing':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> miss (kept existing override)`;
+    case 'error':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> error: ${outcome.errorMessage}`;
+  }
+}
+
+function formatItunesProgress(event: ItunesProgressEvent, dryRun: boolean): string {
+  const { index, total, outcome } = event;
+  const label = `[${index}/${total}] ${formatTarget(outcome)}`;
+
+  switch (outcome.status) {
+    case 'inserted':
+    case 'updated':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> found (${outcome.imageUrl})`;
     case 'not-found':
       return `${dryRun ? '[dry-run] ' : ''}${label} -> not found`;
     case 'kept-existing':
@@ -364,12 +388,14 @@ async function runEnrich(args: string[]): Promise<void> {
   }
 
   const wantsLastfmTrack = sources.includes('lastfm-track');
+  const wantsItunes = sources.includes('itunes');
   if (wantsLastfmTrack && !process.env.LASTFM_API_KEY?.trim()) {
     throw new Error(
-      'Missing LASTFM_API_KEY. Set it in .env to run "lastfm-track" enrichment, or pass "--source self" for offline DB self-healing.',
+      'Missing LASTFM_API_KEY. Set it in .env to run "lastfm-track" enrichment, or pass "--source self,itunes" to run without Last.fm.',
     );
   }
-  const client = wantsLastfmTrack ? createClient() : undefined;
+  const lastfmClient = wantsLastfmTrack ? createClient() : undefined;
+  const itunesClient = wantsItunes ? new ItunesClient() : undefined;
 
   const dryRun = values['dry-run'];
   const prefix = dryRun ? '[dry-run] ' : '';
@@ -381,6 +407,8 @@ async function runEnrich(args: string[]): Promise<void> {
     const resolvedInRun = new Set<string>();
 
     if (sources.includes('self')) {
+      printSectionHeading('Checking local database for artwork', 'cyan');
+
       const selfResult = selfHealArtworkOverrides(db, {
         user,
         dryRun,
@@ -394,7 +422,7 @@ async function runEnrich(args: string[]): Promise<void> {
       }
 
       if (selfResult.candidates.length === 0) {
-        console.log(`${prefix}[self] No self-healable artwork candidates found in ${values.db}.`);
+        console.log(`${prefix}No self-healable artwork candidates found in ${values.db}.`);
       } else {
         console.table(
           selfResult.candidates.map((item) => ({
@@ -409,7 +437,7 @@ async function runEnrich(args: string[]): Promise<void> {
 
         console.log(
           [
-            `${prefix}[self] Complete:`,
+            `${prefix}Complete:`,
             `${selfResult.inserted.toLocaleString()} ${dryRun ? 'to insert' : 'inserted'}`,
             `${selfResult.updated.toLocaleString()} ${dryRun ? 'to update' : 'updated'}`,
             `${selfResult.skippedManual.toLocaleString()} skipped (manual)`,
@@ -423,8 +451,10 @@ async function runEnrich(args: string[]): Promise<void> {
       }
     }
 
-    if (wantsLastfmTrack && client) {
-      const lastfmResult = await enrichLastfmTrackArtwork(db, client, {
+    if (wantsLastfmTrack && lastfmClient) {
+      printSectionHeading('Checking Last.fm for artwork', 'magenta');
+
+      const lastfmResult = await enrichLastfmTrackArtwork(db, lastfmClient, {
         user,
         limit,
         dryRun,
@@ -436,17 +466,23 @@ async function runEnrich(args: string[]): Promise<void> {
         },
       });
 
+      for (const outcome of lastfmResult.outcomes) {
+        if (outcome.status === 'inserted' || outcome.status === 'updated') {
+          resolvedInRun.add(overrideMapKey(outcome.artist, '', outcome.track));
+        }
+      }
+
       if (lastfmResult.queried === 0) {
-        console.log(`${prefix}[lastfm-track] No eligible album-less tracks to query.`);
+        console.log(`${prefix}No eligible album-less tracks to query.`);
       } else if (lastfmResult.queried < lastfmResult.totalEligible) {
         console.log(
-          `${prefix}[lastfm-track] Processed ${lastfmResult.queried.toLocaleString()} of ${lastfmResult.totalEligible.toLocaleString()} eligible track(s) (--limit ${limit}).`,
+          `${prefix}Processed ${lastfmResult.queried.toLocaleString()} of ${lastfmResult.totalEligible.toLocaleString()} eligible track(s) (--limit ${limit}).`,
         );
       }
 
       console.log(
         [
-          `${prefix}[lastfm-track] Complete:`,
+          `${prefix}Complete:`,
           `${lastfmResult.inserted.toLocaleString()} ${dryRun ? 'to insert' : 'inserted'},`,
           `${lastfmResult.updated.toLocaleString()} ${dryRun ? 'to update' : 'updated'},`,
           `${lastfmResult.notFound.toLocaleString()} not found,`,
@@ -460,10 +496,9 @@ async function runEnrich(args: string[]): Promise<void> {
         ].join(' '),
       );
 
-      const totalNotFound = lastfmResult.notFound + lastfmResult.skippedNotFound;
-      if (totalNotFound > 0) {
+      if (!wantsItunes && lastfmResult.skippedNotFound > 0) {
         console.log(
-          `Tip: ${totalNotFound.toLocaleString()} track(s) had no Last.fm artwork (cached as "not_found"). Re-run with --retry-not-found to query them again.`,
+          `Tip: ${lastfmResult.skippedNotFound.toLocaleString()} track(s) were previously cached as "not_found". Re-run with --retry-not-found to query them again.`,
         );
       }
 
@@ -472,8 +507,59 @@ async function runEnrich(args: string[]): Promise<void> {
       }
     }
 
+    if (wantsItunes && itunesClient) {
+      printSectionHeading('Checking iTunes for artwork', 'blue');
+
+      const itunesResult = await enrichItunesArtwork(db, itunesClient, {
+        user,
+        limit,
+        dryRun,
+        force: values.force,
+        retryNotFound: values['retry-not-found'],
+        excludeKeys: resolvedInRun,
+        onProgress: (event) => {
+          console.log(formatItunesProgress(event, dryRun));
+        },
+      });
+
+      if (itunesResult.queried === 0) {
+        console.log(`${prefix}No eligible albums or tracks to query.`);
+      } else if (itunesResult.queried < itunesResult.totalEligible) {
+        console.log(
+          `${prefix}Processed ${itunesResult.queried.toLocaleString()} of ${itunesResult.totalEligible.toLocaleString()} eligible item(s) (--limit ${limit}).`,
+        );
+      }
+
+      console.log(
+        [
+          `${prefix}Complete:`,
+          `${itunesResult.inserted.toLocaleString()} ${dryRun ? 'to insert' : 'inserted'},`,
+          `${itunesResult.updated.toLocaleString()} ${dryRun ? 'to update' : 'updated'},`,
+          `${itunesResult.notFound.toLocaleString()} not found,`,
+          ...(itunesResult.keptExisting > 0
+            ? [`${itunesResult.keptExisting.toLocaleString()} kept existing,`]
+            : []),
+          `${itunesResult.errors.toLocaleString()} error(s),`,
+          `${itunesResult.skippedNotFound.toLocaleString()} skipped (not_found),`,
+          `${itunesResult.skippedManual.toLocaleString()} skipped (manual),`,
+          `${itunesResult.skippedExisting.toLocaleString()} skipped (existing)`,
+        ].join(' '),
+      );
+
+      const totalNotFound = itunesResult.notFound + itunesResult.skippedNotFound;
+      if (totalNotFound > 0) {
+        console.log(
+          `Tip: ${totalNotFound.toLocaleString()} item(s) had no iTunes artwork (cached as "not_found"). Re-run with --retry-not-found to query them again.`,
+        );
+      }
+
+      if (!dryRun) {
+        totalArtworkWritten += itunesResult.inserted + itunesResult.updated;
+      }
+    }
+
     if (!dryRun && totalArtworkWritten > 0) {
-      console.log('Run "pnpm export" to update public/data/scrobbles.json.');
+      console.log('\nRun "pnpm export" to update public/data/scrobbles.json.');
     }
   } finally {
     db.close();
