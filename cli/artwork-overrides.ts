@@ -37,6 +37,7 @@ export interface NormalizedArtworkOverrideKey {
 }
 
 export interface ArtworkOverride {
+  rowid?: number;
   artist: string;
   album: string;
   track: string;
@@ -92,6 +93,7 @@ export interface SelfHealResult {
 }
 
 interface ArtworkOverrideRow {
+  rowid: number;
   artist: string;
   album: string;
   track: string;
@@ -187,6 +189,7 @@ function pairMapKey(first: string, second: string): string {
 function toArtworkOverride(row: ArtworkOverrideRow): ArtworkOverride {
   const source: ArtworkOverrideSource = isArtworkOverrideSource(row.source) ? row.source : 'manual';
   return {
+    rowid: Number(row.rowid),
     artist: row.artist,
     album: row.album,
     track: row.track,
@@ -213,7 +216,7 @@ export function listArtworkOverrides(
   const rows = (options.source
     ? db
         .prepare(
-          `SELECT artist, album, track, image_url, source, updated_at
+          `SELECT rowid, artist, album, track, image_url, source, updated_at
              FROM artwork_overrides
              WHERE source = ?
              ORDER BY artist COLLATE NOCASE ASC, album COLLATE NOCASE ASC, track COLLATE NOCASE ASC`,
@@ -221,7 +224,7 @@ export function listArtworkOverrides(
         .all(options.source)
     : db
         .prepare(
-          `SELECT artist, album, track, image_url, source, updated_at
+          `SELECT rowid, artist, album, track, image_url, source, updated_at
              FROM artwork_overrides
              ORDER BY artist COLLATE NOCASE ASC, album COLLATE NOCASE ASC, track COLLATE NOCASE ASC`,
         )
@@ -237,7 +240,7 @@ export function getArtworkOverride(
   const normalized = normalizeOverrideKey(key);
   const row = db
     .prepare(
-      `SELECT artist, album, track, image_url, source, updated_at
+      `SELECT rowid, artist, album, track, image_url, source, updated_at
        FROM artwork_overrides
        WHERE artist = ? AND album = ? AND track = ?`,
     )
@@ -269,19 +272,24 @@ export function upsertArtworkOverride(
 
   const updatedAt = input.updatedAt ?? Math.floor(Date.now() / 1000);
 
-  db.prepare(
-    `INSERT INTO artwork_overrides (artist, album, track, image_url, source, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)
-     ON CONFLICT (artist, album, track) DO UPDATE SET
-       artist = excluded.artist,
-       album = excluded.album,
-       track = excluded.track,
-       image_url = excluded.image_url,
-       source = excluded.source,
-       updated_at = excluded.updated_at`,
-  ).run(key.artist, key.album, key.track, imageUrl, source, updatedAt);
+  const row = db
+    .prepare(
+      `INSERT INTO artwork_overrides (artist, album, track, image_url, source, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT (artist, album, track) DO UPDATE SET
+         artist = excluded.artist,
+         album = excluded.album,
+         track = excluded.track,
+         image_url = excluded.image_url,
+         source = excluded.source,
+         updated_at = excluded.updated_at
+       RETURNING rowid`,
+    )
+    .get(key.artist, key.album, key.track, imageUrl, source, updatedAt) as unknown as
+    { rowid: number } | undefined;
 
   return {
+    ...(row ? { rowid: Number(row.rowid) } : {}),
     artist: key.artist,
     album: key.album,
     track: key.track,
@@ -301,6 +309,25 @@ export function removeArtworkOverride(db: DatabaseSync, key: ArtworkOverrideKey)
     .run(normalized.artist, normalized.album, normalized.track);
 
   return Number(result.changes) > 0;
+}
+
+export function removeArtworkOverrideByRowid(
+  db: DatabaseSync,
+  rowid: number,
+): ArtworkOverride | undefined {
+  if (!Number.isInteger(rowid) || rowid <= 0) {
+    throw new Error(`Invalid rowid "${String(rowid)}". Must be a positive integer.`);
+  }
+
+  const row = db
+    .prepare(
+      `DELETE FROM artwork_overrides
+       WHERE rowid = ?
+       RETURNING rowid, artist, album, track, image_url, source, updated_at`,
+    )
+    .get(rowid) as unknown as ArtworkOverrideRow | undefined;
+
+  return row ? toArtworkOverride(row) : undefined;
 }
 
 /**

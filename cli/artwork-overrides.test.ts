@@ -10,6 +10,7 @@ import {
   listArtworkOverrides,
   normalizeOverrideKey,
   removeArtworkOverride,
+  removeArtworkOverrideByRowid,
   resolveScrobbleArtwork,
   selfHealArtworkOverrides,
   upsertArtworkOverride,
@@ -140,7 +141,9 @@ describe('artwork_overrides SQLite CRUD', () => {
         updatedAt: 1_700_000_300,
       });
 
-      expect(listArtworkOverrides(db)).toHaveLength(3);
+      const all = listArtworkOverrides(db);
+      expect(all).toHaveLength(3);
+      expect(all.every((item) => typeof item.rowid === 'number' && item.rowid > 0)).toBe(true);
       expect(listArtworkOverrides(db, { source: 'manual' })).toHaveLength(1);
       expect(listArtworkOverrides(db, { source: 'self' })).toHaveLength(1);
       expect(listArtworkOverrides(db, { source: 'not_found' })).toHaveLength(1);
@@ -173,6 +176,32 @@ describe('artwork_overrides SQLite CRUD', () => {
           source: 'not_found',
         }),
       ).toThrow(/not_found/i);
+    } finally {
+      db.close();
+    }
+  });
+
+  test('removes overrides by rowid and validates rowid input', () => {
+    const db = openDatabase(':memory:');
+    try {
+      const saved = upsertArtworkOverride(db, {
+        artist: 'Aphex Twin',
+        album: 'SAW 85-92',
+        imageUrl: LOCAL_PATH,
+        source: 'manual',
+        updatedAt: 1_700_000_000,
+      });
+
+      expect(saved.rowid).toBeDefined();
+      const rowid = saved.rowid!;
+
+      expect(removeArtworkOverrideByRowid(db, rowid)).toEqual(saved);
+      expect(removeArtworkOverrideByRowid(db, rowid)).toBeUndefined();
+      expect(listArtworkOverrides(db)).toHaveLength(0);
+
+      expect(() => removeArtworkOverrideByRowid(db, 0)).toThrow(/positive integer/i);
+      expect(() => removeArtworkOverrideByRowid(db, -3)).toThrow(/positive integer/i);
+      expect(() => removeArtworkOverrideByRowid(db, 1.5)).toThrow(/positive integer/i);
     } finally {
       db.close();
     }
@@ -449,7 +478,7 @@ describe('selfHealArtworkOverrides', () => {
       expect(result.inserted).toBe(2);
       expect(result.updated).toBe(0);
 
-      expect(getArtworkOverride(db, { artist: 'Band', album: 'Record' })).toEqual({
+      expect(getArtworkOverride(db, { artist: 'Band', album: 'Record' })).toMatchObject({
         artist: 'Band',
         album: 'Record',
         track: '',
@@ -459,7 +488,7 @@ describe('selfHealArtworkOverrides', () => {
       });
       expect(
         getArtworkOverride(db, { artist: 'Sam Cooke', track: 'A Change Is Gonna Come' }),
-      ).toEqual({
+      ).toMatchObject({
         artist: 'Sam Cooke',
         album: '',
         track: 'A Change Is Gonna Come',

@@ -5,6 +5,7 @@ import {
   isArtworkOverrideSource,
   listArtworkOverrides,
   removeArtworkOverride,
+  removeArtworkOverrideByRowid,
   selfHealArtworkOverrides,
   upsertArtworkOverride,
 } from './artwork-overrides.ts';
@@ -19,7 +20,7 @@ Subcommands:
   set       Set or clear a manual artwork override
             --artist <name> [--album <name>] [--track <name>] (--url <url|/path> | --clear) [--db <path>]
   remove    Remove an existing artwork override
-            --artist <name> [--album <name>] [--track <name>] [--db <path>]
+            (--rowid <id> | --artist <name> [--album <name>] [--track <name>]) [--db <path>]
   list      List stored artwork overrides
             [--source <${ARTWORK_OVERRIDE_SOURCES.join('|')}>] [--db <path>]
   missing   Report scrobbles still missing artwork after overrides
@@ -99,6 +100,7 @@ function runRemove(args: string[]): void {
   const { values } = parseArgs({
     args,
     options: {
+      rowid: { type: 'string', short: 'r' },
       artist: { type: 'string', short: 'a' },
       album: { type: 'string' },
       track: { type: 'string', short: 't' },
@@ -109,13 +111,43 @@ function runRemove(args: string[]): void {
 
   if (values.help) {
     console.log(
-      'Usage: pnpm artwork remove --artist <name> [--album <name>] [--track <name>] [--db <path>]',
+      'Usage: pnpm artwork remove (--rowid <id> | --artist <name> [--album <name>] [--track <name>]) [--db <path>]',
     );
     return;
   }
 
+  const hasRowid = values.rowid !== undefined;
+  const hasKeyFlags =
+    values.artist !== undefined || values.album !== undefined || values.track !== undefined;
+
+  if (hasRowid && hasKeyFlags) {
+    throw new Error('Pass either --rowid <id> or --artist/--album/--track, not both.');
+  }
+
+  if (hasRowid) {
+    const rawRowid = values.rowid?.trim() ?? '';
+    const rowid = /^\d+$/.test(rawRowid) ? Number(rawRowid) : Number.NaN;
+    if (!Number.isInteger(rowid) || rowid <= 0) {
+      throw new Error(`Invalid --rowid value "${values.rowid}". Must be a positive integer.`);
+    }
+
+    const db = openDatabase(values.db);
+    try {
+      const removed = removeArtworkOverrideByRowid(db, rowid);
+      if (removed) {
+        console.log(`Removed artwork override #${rowid} (${formatTarget(removed)}).`);
+        console.log('Run "pnpm export" to update public/data/scrobbles.json.');
+      } else {
+        console.log(`No artwork override found with rowid ${rowid}.`);
+      }
+    } finally {
+      db.close();
+    }
+    return;
+  }
+
   if (!values.artist?.trim()) {
-    throw new Error('Missing required flag --artist <name>.');
+    throw new Error('Provide --rowid <id> or --artist <name> with --album/--track.');
   }
 
   const db = openDatabase(values.db);
@@ -183,6 +215,7 @@ function runList(args: string[]): void {
 
     console.table(
       overrides.map((item) => ({
+        rowid: item.rowid,
         artist: item.artist,
         album: item.album || '—',
         track: item.track || '—',

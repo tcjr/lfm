@@ -50,7 +50,7 @@ pnpm artwork enrich --dry-run          # preview DB self-healing from existing s
 pnpm artwork enrich                    # apply DB self-healing overrides to SQLite
 pnpm artwork set --artist "Aphex Twin" --album "SAW 85-92" --url "https://..."
 pnpm artwork list                      # inspect stored artwork overrides
-pnpm artwork remove --artist "Aphex Twin" --album "SAW 85-92"
+pnpm artwork remove --rowid 1          # remove an override by rowid (or --artist/--album/--track)
 ```
 
 Artwork commands update the `artwork_overrides` table in SQLite without touching raw `scrobbles` rows; run `pnpm export` afterward to regenerate `public/data/scrobbles.json`.
