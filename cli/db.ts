@@ -1,7 +1,13 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
-import { artistName, bestImage, hasPlaceholderImage, isPlaceholderImageUrl } from './format.ts';
+import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { backup, DatabaseSync } from 'node:sqlite';
+import {
+  artistName,
+  bestImage,
+  defaultBackupPath,
+  hasPlaceholderImage,
+  isPlaceholderImageUrl,
+} from './format.ts';
 import type { ScrobbleRecord, ScrobbleSnapshot, Track } from '#shared/types.ts';
 
 export const DEFAULT_DB_PATH = 'data/lastfm.db';
@@ -195,4 +201,35 @@ export function exportSnapshot(
   mkdirSync(dirname(exportPath), { recursive: true });
   writeFileSync(exportPath, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
   return { ...snapshot, placeholdersReplaced };
+}
+
+export interface BackupDatabaseResult {
+  sourcePath: string;
+  backupPath: string;
+  pages: number;
+  bytes: number;
+}
+
+export async function backupDatabase(
+  dbPath = DEFAULT_DB_PATH,
+  backupPath = defaultBackupPath(dbPath),
+): Promise<BackupDatabaseResult> {
+  if (!existsSync(dbPath)) {
+    throw new Error(`Database file not found: ${dbPath}`);
+  }
+
+  if (resolve(dbPath) === resolve(backupPath)) {
+    throw new Error(`Backup path must be different from source database: ${dbPath}`);
+  }
+
+  mkdirSync(dirname(backupPath), { recursive: true });
+
+  const db = new DatabaseSync(dbPath, { readOnly: true });
+  try {
+    const pages = await backup(db, backupPath);
+    const bytes = statSync(backupPath).size;
+    return { sourcePath: dbPath, backupPath, pages, bytes };
+  } finally {
+    db.close();
+  }
 }

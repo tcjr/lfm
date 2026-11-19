@@ -44,6 +44,7 @@ pnpm sync                              # initial 3 months, or incremental since 
 pnpm sync -- --months 6                # backfill the last 6 months
 pnpm sync -- --from 2026-01-01         # backfill from an ISO date or unix timestamp
 pnpm export                            # regenerate public/data/scrobbles.json offline from SQLite
+pnpm backup                            # save a timestamped SQLite backup in data/
 ```
 
 Start the local Ember development server:

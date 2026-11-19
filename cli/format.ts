@@ -73,6 +73,46 @@ export function formatDuration(ms: string | number | undefined): string {
   return `${minutes}:${seconds}`;
 }
 
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) {
+    return '0 B';
+  }
+
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+
+  return unitIndex === 0 ? `${Math.round(value)} B` : `${value.toFixed(1)} ${units[unitIndex]}`;
+}
+
+/** Format a local timestamp as `YYYYMMDD_HHMMSS` for backup filenames. */
+export function formatBackupTimestamp(date: Date = new Date()): string {
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+}
+
+/** Build a timestamped backup path alongside the source database (e.g. `data/lastfm-backup-20261119_070244.db`). */
+export function defaultBackupPath(dbPath: string, date: Date = new Date()): string {
+  const lastSep = Math.max(dbPath.lastIndexOf('/'), dbPath.lastIndexOf('\\'));
+  const dir = lastSep >= 0 ? dbPath.slice(0, lastSep + 1) : '';
+  const filename = lastSep >= 0 ? dbPath.slice(lastSep + 1) : dbPath;
+  const dotIndex = filename.lastIndexOf('.');
+  const hasExt = dotIndex > 0;
+  const stem = hasExt ? filename.slice(0, dotIndex) : filename;
+  const ext = hasExt ? filename.slice(dotIndex) : '';
+  return `${dir}${stem}-backup-${formatBackupTimestamp(date)}${ext}`;
+}
+
 export function printTrackTable(tracks: Track[]): void {
   console.table(
     tracks.map((track, index) => ({

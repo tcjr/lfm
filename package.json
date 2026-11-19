@@ -26,6 +26,7 @@
     "build-storybook": "storybook build",
     "sync": "node cli/sync.ts",
     "export": "node cli/export.ts",
+    "backup": "node cli/backup.ts",
     "lint:eslint": "eslint . --cache",
     "lint:eslint:fix": "eslint . --fix",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",

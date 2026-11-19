@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import {
   bestImage,
+  defaultBackupPath,
+  formatBackupTimestamp,
+  formatBytes,
   hasPlaceholderImage,
   isPlaceholderImageUrl,
   LASTFM_PLACEHOLDER_IMAGE_HASH,
@@ -87,5 +90,29 @@ describe('Last.fm placeholder image filtering', () => {
     ];
 
     expect(bestImage(images)).toBe(VALID_LARGE);
+  });
+});
+
+describe('database backup formatting', () => {
+  test('formatBackupTimestamp formats local date and time as YYYYMMDD_HHMMSS', () => {
+    const date = new Date(2026, 10, 19, 7, 2, 44);
+    expect(formatBackupTimestamp(date)).toBe('20261119_070244');
+  });
+
+  test('defaultBackupPath inserts -backup-<timestamp> before the file extension', () => {
+    const date = new Date(2026, 10, 19, 7, 2, 44);
+
+    expect(defaultBackupPath('data/lastfm.db', date)).toBe('data/lastfm-backup-20261119_070244.db');
+    expect(defaultBackupPath('lastfm.db', date)).toBe('lastfm-backup-20261119_070244.db');
+    expect(defaultBackupPath('data/my.lastfm.sqlite', date)).toBe(
+      'data/my.lastfm-backup-20261119_070244.sqlite',
+    );
+    expect(defaultBackupPath('data/lastfm', date)).toBe('data/lastfm-backup-20261119_070244');
+  });
+
+  test('formatBytes formats byte sizes into readable units', () => {
+    expect(formatBytes(512)).toBe('512 B');
+    expect(formatBytes(2048)).toBe('2.0 KB');
+    expect(formatBytes(3_334_144)).toBe('3.2 MB');
   });
 });
