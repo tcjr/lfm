@@ -29,9 +29,14 @@ if (!user) {
 const snapshot = exportSnapshot(db, user, values.out);
 if (snapshot.placeholdersReplaced > 0) {
   console.log(
-    `Replaced ${snapshot.placeholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s) with empty artwork.`,
+    `Ignored ${snapshot.placeholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s).`,
+  );
+}
+if (snapshot.overridesApplied > 0) {
+  console.log(
+    `Applied artwork overrides to ${snapshot.overridesApplied.toLocaleString()} scrobble(s).`,
   );
 }
 console.log(
-  `Exported ${snapshot.count.toLocaleString()} scrobbles for "${snapshot.user}" to ${values.out}`,
+  `Exported ${snapshot.count.toLocaleString()} scrobbles for "${snapshot.user}" to ${values.out} (${snapshot.missingArtwork.toLocaleString()} without artwork).`,
 );

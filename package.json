@@ -27,6 +27,7 @@
     "sync": "node cli/sync.ts",
     "export": "node cli/export.ts",
     "backup": "node cli/backup.ts",
+    "artwork": "node cli/artwork.ts",
     "lint:eslint": "eslint . --cache",
     "lint:eslint:fix": "eslint . --fix",
     "lint": "concurrently \"pnpm:lint:*(!fix)\" --names \"lint:\" --prefixColors auto",
@@ -37,6 +38,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:storybook": "vitest run --project storybook",
+    "test:cli": "vitest run --project cli",
     "test:unit": "vitest run --project unit",
     "lint:types": "tsc --noEmit --runExternalCode"
   },

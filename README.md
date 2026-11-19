@@ -45,7 +45,15 @@ pnpm sync -- --months 6                # backfill the last 6 months
 pnpm sync -- --from 2026-01-01         # backfill from an ISO date or unix timestamp
 pnpm export                            # regenerate public/data/scrobbles.json offline from SQLite
 pnpm backup                            # save a timestamped SQLite backup in data/
+pnpm artwork missing                   # list scrobbles missing artwork after overrides
+pnpm artwork enrich --dry-run          # preview DB self-healing from existing scrobbles
+pnpm artwork enrich                    # apply DB self-healing overrides to SQLite
+pnpm artwork set --artist "Aphex Twin" --album "SAW 85-92" --url "https://..."
+pnpm artwork list                      # inspect stored artwork overrides
+pnpm artwork remove --artist "Aphex Twin" --album "SAW 85-92"
 ```
+
+Artwork commands update the `artwork_overrides` table in SQLite without touching raw `scrobbles` rows; run `pnpm export` afterward to regenerate `public/data/scrobbles.json`.
 
 Start the local Ember development server:
 

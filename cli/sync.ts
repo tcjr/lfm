@@ -128,10 +128,11 @@ console.log(
   [
     `Sync complete: ${bounds.count.toLocaleString()} total scrobbles in ${values.db}.`,
     ...(totalPlaceholdersReplaced > 0
-      ? [
-          `Replaced ${totalPlaceholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s) with empty artwork.`,
-        ]
+      ? [`Ignored ${totalPlaceholdersReplaced.toLocaleString()} Last.fm placeholder image URL(s).`]
       : []),
-    `Exported front-end snapshot to ${values.out} (${snapshot.count.toLocaleString()} scrobbles).`,
+    ...(snapshot.overridesApplied > 0
+      ? [`Applied artwork overrides to ${snapshot.overridesApplied.toLocaleString()} scrobble(s).`]
+      : []),
+    `Exported front-end snapshot to ${values.out} (${snapshot.count.toLocaleString()} scrobbles, ${snapshot.missingArtwork.toLocaleString()} without artwork).`,
   ].join('\n'),
 );

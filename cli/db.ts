@@ -2,6 +2,12 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { backup, DatabaseSync } from 'node:sqlite';
 import {
+  ARTWORK_OVERRIDES_SCHEMA_SQL,
+  buildArtworkOverrideIndex,
+  listArtworkOverrides,
+  resolveScrobbleArtwork,
+} from './artwork-overrides.ts';
+import {
   artistName,
   bestImage,
   defaultBackupPath,
@@ -26,7 +32,9 @@ interface ScrobbleRow {
 }
 
 export function openDatabase(dbPath = DEFAULT_DB_PATH): DatabaseSync {
-  mkdirSync(dirname(dbPath), { recursive: true });
+  if (dbPath !== ':memory:') {
+    mkdirSync(dirname(dbPath), { recursive: true });
+  }
   const db = new DatabaseSync(dbPath);
   db.exec(`
     PRAGMA journal_mode = WAL;
@@ -45,6 +53,7 @@ export function openDatabase(dbPath = DEFAULT_DB_PATH): DatabaseSync {
       PRIMARY KEY (user, uts, artist, track)
     );
     CREATE INDEX IF NOT EXISTS idx_scrobbles_user_uts ON scrobbles (user, uts DESC);
+    ${ARTWORK_OVERRIDES_SCHEMA_SQL}
   `);
   return db;
 }
@@ -153,6 +162,8 @@ export function getStoredUser(db: DatabaseSync): string | undefined {
 
 export interface ExportSnapshotResult extends ScrobbleSnapshot {
   placeholdersReplaced: number;
+  overridesApplied: number;
+  missingArtwork: number;
 }
 
 export function exportSnapshot(
@@ -161,6 +172,7 @@ export function exportSnapshot(
   exportPath = DEFAULT_EXPORT_PATH,
 ): ExportSnapshotResult {
   const normalizedUser = user.toLowerCase();
+  const overrides = buildArtworkOverrideIndex(listArtworkOverrides(db));
   const rows = db
     .prepare(
       `SELECT uts, track, artist, album, track_mbid, artist_mbid, album_mbid, loved, image_url
@@ -171,12 +183,30 @@ export function exportSnapshot(
     .all(normalizedUser) as unknown as ScrobbleRow[];
 
   let placeholdersReplaced = 0;
+  let overridesApplied = 0;
+  let missingArtwork = 0;
+
   const scrobbles: ScrobbleRecord[] = rows.map((row) => {
-    const isPlaceholder = isPlaceholderImageUrl(row.image_url);
-    if (isPlaceholder) {
+    if (isPlaceholderImageUrl(row.image_url)) {
       placeholdersReplaced++;
     }
-    const imageUrl = row.image_url && !isPlaceholder ? row.image_url : undefined;
+
+    const resolved = resolveScrobbleArtwork(
+      {
+        artist: row.artist,
+        album: row.album,
+        track: row.track,
+        imageUrl: row.image_url,
+      },
+      overrides,
+    );
+
+    if (resolved.fromOverride) {
+      overridesApplied++;
+    }
+    if (!resolved.imageUrl) {
+      missingArtwork++;
+    }
 
     return {
       uts: row.uts,
@@ -187,7 +217,7 @@ export function exportSnapshot(
       ...(row.artist_mbid ? { artistMbid: row.artist_mbid } : {}),
       ...(row.album_mbid ? { albumMbid: row.album_mbid } : {}),
       loved: row.loved === 1,
-      ...(imageUrl ? { imageUrl } : {}),
+      ...(resolved.imageUrl ? { imageUrl: resolved.imageUrl } : {}),
     };
   });
 
@@ -200,7 +230,7 @@ export function exportSnapshot(
 
   mkdirSync(dirname(exportPath), { recursive: true });
   writeFileSync(exportPath, `${JSON.stringify(snapshot, null, 2)}\n`, 'utf8');
-  return { ...snapshot, placeholdersReplaced };
+  return { ...snapshot, placeholdersReplaced, overridesApplied, missingArtwork };
 }
 
 export interface BackupDatabaseResult {

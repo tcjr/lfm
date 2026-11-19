@@ -62,10 +62,17 @@ export default defineConfig({
   test: {
     projects: [
       {
+        test: {
+          name: 'cli',
+          environment: 'node',
+          include: ['cli/**/*.{test,spec}.{js,ts}'],
+        },
+      },
+      {
         extends: true,
         test: {
           name: 'unit',
-          include: ['{app,cli,shared}/**/*.{test,spec}.{js,ts,gjs,gts}'],
+          include: ['{app,shared}/**/*.{test,spec}.{js,ts,gjs,gts}'],
           browser: {
             enabled: true,
             provider: browserProvider,
