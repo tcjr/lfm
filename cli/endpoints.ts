@@ -47,8 +47,39 @@ export function artistSimilar(client: LastfmClient, artist: string, options: Pag
   });
 }
 
-export function trackInfo(client: LastfmClient, artist: string, track: string, username?: string) {
-  return client.call<TrackInfoResponse>('track.getInfo', { artist, track, username });
+export interface TrackInfoOptions {
+  username?: string;
+  autocorrect?: boolean | 0 | 1;
+}
+
+export function trackInfo(
+  client: LastfmClient,
+  artist: string,
+  track: string,
+  usernameOrOptions?: string | TrackInfoOptions,
+) {
+  const options: TrackInfoOptions =
+    typeof usernameOrOptions === 'string'
+      ? { username: usernameOrOptions }
+      : (usernameOrOptions ?? {});
+  return client.call<TrackInfoResponse>('track.getInfo', {
+    artist,
+    track,
+    username: options.username,
+    autocorrect: options.autocorrect === undefined ? undefined : options.autocorrect ? 1 : 0,
+  });
+}
+
+export function trackInfoByMbid(
+  client: LastfmClient,
+  mbid: string,
+  options: TrackInfoOptions = {},
+) {
+  return client.call<TrackInfoResponse>('track.getInfo', {
+    mbid,
+    username: options.username,
+    autocorrect: options.autocorrect === undefined ? undefined : options.autocorrect ? 1 : 0,
+  });
 }
 
 export function userRecentTracks(

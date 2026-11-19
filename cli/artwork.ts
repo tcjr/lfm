@@ -1,15 +1,22 @@
 import { parseArgs } from 'node:util';
 import {
+  ENRICH_SOURCES,
+  enrichLastfmTrackArtwork,
+  parseEnrichSources,
+  type LastfmTrackProgressEvent,
+} from './artwork-enrich.ts';
+import {
   ARTWORK_OVERRIDE_SOURCES,
   findMissingArtwork,
   isArtworkOverrideSource,
   listArtworkOverrides,
+  overrideMapKey,
   removeArtworkOverride,
   removeArtworkOverrideByRowid,
   selfHealArtworkOverrides,
   upsertArtworkOverride,
 } from './artwork-overrides.ts';
-import { loadEnv } from './config.ts';
+import { createClient, loadEnv } from './config.ts';
 import { DEFAULT_DB_PATH, getStoredUser, openDatabase } from './db.ts';
 
 loadEnv();
@@ -25,8 +32,9 @@ Subcommands:
             [--source <${ARTWORK_OVERRIDE_SOURCES.join('|')}>] [--db <path>]
   missing   Report scrobbles still missing artwork after overrides
             [--user <username>] [--limit <n>] [--album-only | --no-album] [--db <path>]
-  enrich    Auto-heal missing artwork from existing scrobbles in SQLite
-            [--user <username>] [--dry-run] [--force] [--db <path>]
+  enrich    Enrich missing artwork in SQLite (defaults to: ${ENRICH_SOURCES.join(' -> ')})
+            [--source <${ENRICH_SOURCES.join('|')}|...>] [--user <username>] [--limit <n>]
+            [--dry-run] [--force] [--retry-not-found] [--db <path>]
 
 Artwork commands only update SQLite; run "pnpm export" afterward to regenerate scrobbles.json.`;
 
@@ -300,13 +308,34 @@ function runMissing(args: string[]): void {
   }
 }
 
-function runEnrich(args: string[]): void {
+function formatLastfmProgress(event: LastfmTrackProgressEvent, dryRun: boolean): string {
+  const { index, total, outcome } = event;
+  const label = `[${index}/${total}] ${outcome.artist} — ${outcome.track}`;
+  const via = outcome.matchedVia === 'mbid' ? ' via mbid' : '';
+
+  switch (outcome.status) {
+    case 'inserted':
+    case 'updated':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> found${via} (${outcome.imageUrl})`;
+    case 'not-found':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> not found`;
+    case 'kept-existing':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> miss (kept existing override)`;
+    case 'error':
+      return `${dryRun ? '[dry-run] ' : ''}${label} -> error: ${outcome.errorMessage}`;
+  }
+}
+
+async function runEnrich(args: string[]): Promise<void> {
   const { values } = parseArgs({
     args,
     options: {
+      source: { type: 'string', short: 's' },
       user: { type: 'string', short: 'u' },
+      limit: { type: 'string', short: 'l' },
       'dry-run': { type: 'boolean', default: false },
       force: { type: 'boolean', default: false },
+      'retry-not-found': { type: 'boolean', default: false },
       db: { type: 'string', default: DEFAULT_DB_PATH },
       help: { type: 'boolean', short: 'h', default: false },
     },
@@ -314,47 +343,136 @@ function runEnrich(args: string[]): void {
 
   if (values.help) {
     console.log(
-      'Usage: pnpm artwork enrich [--user <username>] [--dry-run] [--force] [--db <path>]',
+      [
+        `Usage: pnpm artwork enrich [--source <${ENRICH_SOURCES.join('|')}|...>] [--user <username>] [--limit <n>] [--dry-run] [--force] [--retry-not-found] [--db <path>]`,
+        `Defaults to running all sources in order: ${ENRICH_SOURCES.join(', ')}.`,
+      ].join('\n'),
     );
     return;
   }
 
+  const sources = parseEnrichSources(values.source);
+
+  let limit: number | undefined;
+  if (values.limit !== undefined) {
+    const rawLimit = values.limit.trim();
+    const parsedLimit = /^\d+$/.test(rawLimit) ? Number(rawLimit) : Number.NaN;
+    if (!Number.isInteger(parsedLimit) || parsedLimit <= 0) {
+      throw new Error(`Invalid --limit value "${values.limit}". Must be a positive integer.`);
+    }
+    limit = parsedLimit;
+  }
+
+  const wantsLastfmTrack = sources.includes('lastfm-track');
+  if (wantsLastfmTrack && !process.env.LASTFM_API_KEY?.trim()) {
+    throw new Error(
+      'Missing LASTFM_API_KEY. Set it in .env to run "lastfm-track" enrichment, or pass "--source self" for offline DB self-healing.',
+    );
+  }
+  const client = wantsLastfmTrack ? createClient() : undefined;
+
+  const dryRun = values['dry-run'];
+  const prefix = dryRun ? '[dry-run] ' : '';
+  const user = values.user?.trim() || undefined;
+  let totalArtworkWritten = 0;
+
   const db = openDatabase(values.db);
   try {
-    const result = selfHealArtworkOverrides(db, {
-      user: values.user?.trim() || undefined,
-      dryRun: values['dry-run'],
-      force: values.force,
-    });
+    const resolvedInRun = new Set<string>();
 
-    const prefix = result.dryRun ? '[dry-run] ' : '';
+    if (sources.includes('self')) {
+      const selfResult = selfHealArtworkOverrides(db, {
+        user,
+        dryRun,
+        force: values.force,
+      });
 
-    if (result.candidates.length === 0) {
-      console.log(`${prefix}No self-healable artwork candidates found in ${values.db}.`);
-      return;
+      for (const item of selfResult.candidates) {
+        if (item.action === 'insert' || item.action === 'update') {
+          resolvedInRun.add(overrideMapKey(item.artist, item.album, item.track));
+        }
+      }
+
+      if (selfResult.candidates.length === 0) {
+        console.log(`${prefix}[self] No self-healable artwork candidates found in ${values.db}.`);
+      } else {
+        console.table(
+          selfResult.candidates.map((item) => ({
+            action: item.action,
+            scrobbles: item.matchCount,
+            artist: item.artist,
+            album: item.album || '—',
+            track: item.track || '—',
+            imageUrl: item.imageUrl,
+          })),
+        );
+
+        console.log(
+          [
+            `${prefix}[self] Complete:`,
+            `${selfResult.inserted.toLocaleString()} ${dryRun ? 'to insert' : 'inserted'}`,
+            `${selfResult.updated.toLocaleString()} ${dryRun ? 'to update' : 'updated'}`,
+            `${selfResult.skippedManual.toLocaleString()} skipped (manual)`,
+            `${selfResult.skippedExisting.toLocaleString()} skipped (existing)`,
+          ].join(' '),
+        );
+      }
+
+      if (!dryRun) {
+        totalArtworkWritten += selfResult.inserted + selfResult.updated;
+      }
     }
 
-    console.table(
-      result.candidates.map((item) => ({
-        action: item.action,
-        scrobbles: item.matchCount,
-        artist: item.artist,
-        album: item.album || '—',
-        track: item.track || '—',
-        imageUrl: item.imageUrl,
-      })),
-    );
+    if (wantsLastfmTrack && client) {
+      const lastfmResult = await enrichLastfmTrackArtwork(db, client, {
+        user,
+        limit,
+        dryRun,
+        force: values.force,
+        retryNotFound: values['retry-not-found'],
+        excludeKeys: resolvedInRun,
+        onProgress: (event) => {
+          console.log(formatLastfmProgress(event, dryRun));
+        },
+      });
 
-    const summary = [
-      `${prefix}DB self-heal complete:`,
-      `${result.inserted.toLocaleString()} ${result.dryRun ? 'to insert' : 'inserted'}`,
-      `${result.updated.toLocaleString()} ${result.dryRun ? 'to update' : 'updated'}`,
-      `${result.skippedManual.toLocaleString()} skipped (manual)`,
-      `${result.skippedExisting.toLocaleString()} skipped (existing)`,
-    ].join(' ');
+      if (lastfmResult.queried === 0) {
+        console.log(`${prefix}[lastfm-track] No eligible album-less tracks to query.`);
+      } else if (lastfmResult.queried < lastfmResult.totalEligible) {
+        console.log(
+          `${prefix}[lastfm-track] Processed ${lastfmResult.queried.toLocaleString()} of ${lastfmResult.totalEligible.toLocaleString()} eligible track(s) (--limit ${limit}).`,
+        );
+      }
 
-    console.log(summary);
-    if (!result.dryRun && (result.inserted > 0 || result.updated > 0)) {
+      console.log(
+        [
+          `${prefix}[lastfm-track] Complete:`,
+          `${lastfmResult.inserted.toLocaleString()} ${dryRun ? 'to insert' : 'inserted'},`,
+          `${lastfmResult.updated.toLocaleString()} ${dryRun ? 'to update' : 'updated'},`,
+          `${lastfmResult.notFound.toLocaleString()} not found,`,
+          ...(lastfmResult.keptExisting > 0
+            ? [`${lastfmResult.keptExisting.toLocaleString()} kept existing,`]
+            : []),
+          `${lastfmResult.errors.toLocaleString()} error(s),`,
+          `${lastfmResult.skippedNotFound.toLocaleString()} skipped (not_found),`,
+          `${lastfmResult.skippedManual.toLocaleString()} skipped (manual),`,
+          `${lastfmResult.skippedExisting.toLocaleString()} skipped (existing)`,
+        ].join(' '),
+      );
+
+      const totalNotFound = lastfmResult.notFound + lastfmResult.skippedNotFound;
+      if (totalNotFound > 0) {
+        console.log(
+          `Tip: ${totalNotFound.toLocaleString()} track(s) had no Last.fm artwork (cached as "not_found"). Re-run with --retry-not-found to query them again.`,
+        );
+      }
+
+      if (!dryRun) {
+        totalArtworkWritten += lastfmResult.inserted + lastfmResult.updated;
+      }
+    }
+
+    if (!dryRun && totalArtworkWritten > 0) {
       console.log('Run "pnpm export" to update public/data/scrobbles.json.');
     }
   } finally {
@@ -385,7 +503,7 @@ try {
       runMissing(rest);
       break;
     case 'enrich':
-      runEnrich(rest);
+      await runEnrich(rest);
       break;
     default:
       throw new Error(`Unknown subcommand "${subcommand}".\n\n${USAGE}`);
