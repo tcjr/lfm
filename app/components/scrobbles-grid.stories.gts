@@ -146,16 +146,63 @@ export const FallbackInitials = meta.story({
 });
 
 FallbackInitials.test(
-  'displays album or artist initials when artwork is unavailable',
+  'displays smart album or artist initials with deterministic palettes when artwork is unavailable',
   async ({ canvas }) => {
-    // Album initials (first 2 characters of album name)
-    await expect(canvas.getByText('Th')).toBeInTheDocument();
-    await expect(canvas.getByText('Fr')).toBeInTheDocument();
-    await expect(canvas.getByText('Ne')).toBeInTheDocument();
-    await expect(canvas.getByText('Al')).toBeInTheDocument();
-    await expect(canvas.getByText('Ti')).toBeInTheDocument();
+    // Smart word initials for album names (skipping leading/filler words when 2+ content words remain)
+    await expect(canvas.getByText('JG')).toBeInTheDocument();
+    await expect(canvas.getByText('FE')).toBeInTheDocument();
+    await expect(canvas.getByText('NO')).toBeInTheDocument();
+    await expect(canvas.getByText('AA')).toBeInTheDocument();
+    await expect(canvas.getByText('TB')).toBeInTheDocument();
 
     // Falls back to artist initials when album is empty
-    await expect(canvas.getByText('Ja')).toBeInTheDocument();
+    await expect(canvas.getByText('JI')).toBeInTheDocument();
+
+    const palettes = new Set(
+      canvas
+        .getAllByRole('article')
+        .map((tile) =>
+          tile.querySelector('[data-fallback-palette]')?.getAttribute('data-fallback-palette'),
+        )
+        .filter(Boolean),
+    );
+
+    await expect(palettes.size).toBeGreaterThanOrEqual(4);
+  },
+);
+
+export const FallbackHoverOverlay = meta.story({
+  args: {
+    scrobbles: FALLBACK_ONLY_SCROBBLES,
+    overlay: 'hover',
+    lovedIndicator: 'hover',
+  },
+  play: async ({ canvas, userEvent }) => {
+    const tiles = canvas.getAllByRole('article');
+
+    if (tiles[4]) {
+      await userEvent.hover(tiles[4]);
+    }
+
+    await expect(canvas.getByText('TB')).toBeInTheDocument();
+    await expect(canvas.getByText('Tigers Blood')).toBeInTheDocument();
+  },
+});
+
+export const FallbackArtworkOnly = meta.story({
+  args: {
+    scrobbles: FALLBACK_ONLY_SCROBBLES,
+    overlay: 'none',
+    lovedIndicator: 'none',
+  },
+});
+
+FallbackArtworkOnly.test(
+  'renders full-bleed fallback artwork tiles without overlays or loved badges',
+  async ({ canvas }) => {
+    await expect(canvas.getAllByRole('article')).toHaveLength(FALLBACK_ONLY_SCROBBLES.length);
+    await expect(canvas.getByText('TB')).toBeInTheDocument();
+    await expect(canvas.queryByText('Tigers Blood')).not.toBeInTheDocument();
+    await expect(canvas.queryAllByLabelText('Loved track')).toHaveLength(0);
   },
 );

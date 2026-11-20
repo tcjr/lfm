@@ -2,7 +2,9 @@ import type { TOC } from '@ember/component/template-only';
 import { expect, waitFor } from 'storybook/test';
 import preview from '#storybook/preview.ts';
 import ScrobbleArtwork, { type ScrobbleArtworkSignature } from './scrobble-artwork.gts';
+import ScrobblesTable from './scrobbles-table.gts';
 import type { ScrobbleRecord } from '#shared/types.ts';
+import { getArtworkFallbackPalette } from '#utils/artwork-fallback.ts';
 
 const SAMPLE_ARTWORK_DATA_URI =
   'data:image/svg+xml;utf8,' +
@@ -19,12 +21,138 @@ const BASE_SCROBBLE: ScrobbleRecord = {
   imageUrl: SAMPLE_ARTWORK_DATA_URI,
 };
 
+const FALLBACK_GALLERY_SCROBBLES: ScrobbleRecord[] = [
+  {
+    uts: 1_793_717_660,
+    track: 'Right Back to It (feat. MJ Lenderman)',
+    artist: 'Waxahatchee',
+    album: 'Tigers Blood',
+    loved: true,
+  },
+  {
+    uts: 1_793_717_500,
+    track: '3 Sisters',
+    artist: 'Waxahatchee',
+    album: 'Tigers Blood',
+    loved: false,
+  },
+  {
+    uts: 1_793_717_238,
+    track: "let's rock and roll",
+    artist: 'Bobby Bare Jr.',
+    album: 'From the End of Your Leash',
+    loved: true,
+  },
+  {
+    uts: 1_793_717_030,
+    track: 'Bring It on Home to Me',
+    artist: 'Jamie McLean Band',
+    album: 'New Orleans Sessions',
+    loved: false,
+  },
+  {
+    uts: 1_793_716_450,
+    track: 'So What',
+    artist: 'Miles Davis',
+    album: 'Kind of Blue',
+    loved: true,
+  },
+  {
+    uts: 1_793_716_177,
+    track: 'Jóga',
+    artist: 'Björk',
+    album: 'Homogenic',
+    loved: false,
+  },
+  {
+    uts: 1_793_715_800,
+    track: 'Unreleased Demo Track',
+    artist: 'Jason Isbell',
+    album: '',
+    loved: false,
+  },
+  {
+    uts: 1_793_715_000,
+    track: '',
+    artist: '',
+    album: '',
+    loved: false,
+  },
+];
+
+const TABLE_SHOWCASE_SCROBBLES: ScrobbleRecord[] = [
+  BASE_SCROBBLE,
+  FALLBACK_GALLERY_SCROBBLES[0]!,
+  FALLBACK_GALLERY_SCROBBLES[2]!,
+  FALLBACK_GALLERY_SCROBBLES[4]!,
+  FALLBACK_GALLERY_SCROBBLES[6]!,
+];
+
 const ScrobbleArtworkStory: TOC<ScrobbleArtworkSignature> = <template>
   <ScrobbleArtwork
     @scrobble={{@scrobble}}
     data-testid="scrobble-artwork"
     class="size-24 rounded-lg text-2xl"
   />
+</template>;
+
+const FallbackSizesStory: TOC<ScrobbleArtworkSignature> = <template>
+  <div class="flex flex-wrap items-end gap-6">
+    <div class="flex flex-col items-center gap-2">
+      <ScrobbleArtwork
+        @scrobble={{@scrobble}}
+        data-testid="artwork-table"
+        class="size-10 rounded-md"
+      />
+      <span class="text-xs text-base-content/70">Table (size-10)</span>
+    </div>
+    <div class="flex flex-col items-center gap-2">
+      <ScrobbleArtwork
+        @scrobble={{@scrobble}}
+        data-testid="artwork-compact"
+        class="size-16 rounded-lg"
+      />
+      <span class="text-xs text-base-content/70">Compact (size-16)</span>
+    </div>
+    <div class="flex flex-col items-center gap-2">
+      <ScrobbleArtwork
+        @scrobble={{@scrobble}}
+        data-testid="artwork-medium"
+        class="size-24 rounded-lg"
+      />
+      <span class="text-xs text-base-content/70">Medium (size-24)</span>
+    </div>
+    <div class="flex flex-col items-center gap-2">
+      <ScrobbleArtwork
+        @scrobble={{@scrobble}}
+        data-testid="artwork-grid"
+        class="size-52 rounded-xl"
+      />
+      <span class="text-xs text-base-content/70">Grid tile (size-52)</span>
+    </div>
+  </div>
+</template>;
+
+const FallbackPaletteGalleryStory: TOC<ScrobbleArtworkSignature> = <template>
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    {{#each FALLBACK_GALLERY_SCROBBLES as |item index|}}
+      <div class="flex flex-col items-center gap-2 text-center">
+        <ScrobbleArtwork
+          @scrobble={{item}}
+          data-testid="gallery-artwork-{{index}}"
+          class="size-28 rounded-xl shadow-sm"
+        />
+        <div class="w-28">
+          <p class="truncate text-xs font-medium">{{or item.album item.artist "Unknown"}}</p>
+          <p class="truncate text-[11px] text-base-content/65">{{or item.artist "No metadata"}}</p>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</template>;
+
+const TableThumbnailContextStory: TOC<ScrobbleArtworkSignature> = <template>
+  <ScrobblesTable @scrobbles={{TABLE_SHOWCASE_SCROBBLES}} />
 </template>;
 
 const meta = preview.meta({
@@ -49,6 +177,7 @@ LoadedImage.test(
 
     await expect(container).not.toHaveAttribute('data-loading');
     await expect(container).not.toHaveAttribute('data-error');
+    await expect(container).not.toHaveAttribute('data-fallback-palette');
   },
 );
 
@@ -83,14 +212,20 @@ export const AlbumInitialsFallback = meta.story({
 });
 
 AlbumInitialsFallback.test(
-  'renders album initials immediately without loading when imageUrl is omitted',
+  'renders smart album initials and deterministic palette when imageUrl is omitted',
   async ({ canvas }) => {
     const container = canvas.getByTestId('scrobble-artwork');
+    const expectedPalette = getArtworkFallbackPalette({
+      artist: 'Waxahatchee',
+      album: 'Tigers Blood',
+      track: 'Right Back to It (feat. MJ Lenderman)',
+    });
 
-    await expect(canvas.getByText('Ti')).toBeInTheDocument();
+    await expect(canvas.getByText('TB')).toBeInTheDocument();
     await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
     await expect(container).not.toHaveAttribute('data-loading');
     await expect(container).not.toHaveAttribute('data-error');
+    await expect(container).toHaveAttribute('data-fallback-palette', expectedPalette.id);
   },
 );
 
@@ -107,9 +242,29 @@ export const ArtistInitialsFallback = meta.story({
 });
 
 ArtistInitialsFallback.test(
-  'falls back to artist initials when both imageUrl and album are empty',
+  'falls back to smart artist initials when both imageUrl and album are empty',
   async ({ canvas }) => {
-    await expect(canvas.getByText('Ja')).toBeInTheDocument();
+    await expect(canvas.getByText('JI')).toBeInTheDocument();
+    await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
+  },
+);
+
+export const SingleWordFallback = meta.story({
+  args: {
+    scrobble: {
+      uts: 1_793_715_400,
+      track: 'Jóga',
+      artist: 'Björk',
+      album: 'Homogenic',
+      loved: true,
+    },
+  },
+});
+
+SingleWordFallback.test(
+  'uses the first two letters for single-word album titles',
+  async ({ canvas }) => {
+    await expect(canvas.getByText('HO')).toBeInTheDocument();
     await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
   },
 );
@@ -154,7 +309,59 @@ BrokenImageUrl.test(
     });
 
     await expect(container).not.toHaveAttribute('data-loading');
-    await expect(canvas.getByText('Br')).toBeInTheDocument();
+    await expect(container).toHaveAttribute('data-fallback-palette');
+    await expect(canvas.getByText('BC')).toBeInTheDocument();
     await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
+  },
+);
+
+export const FallbackSizes = meta.story({
+  args: {
+    scrobble: FALLBACK_GALLERY_SCROBBLES[0]!,
+  },
+  render: () => FallbackSizesStory,
+});
+
+FallbackSizes.test('renders fallback cleanly across table and grid sizes', async ({ canvas }) => {
+  await expect(canvas.getByTestId('artwork-table')).toBeInTheDocument();
+  await expect(canvas.getByTestId('artwork-compact')).toBeInTheDocument();
+  await expect(canvas.getByTestId('artwork-medium')).toBeInTheDocument();
+  await expect(canvas.getByTestId('artwork-grid')).toBeInTheDocument();
+  await expect(canvas.getAllByText('TB')).toHaveLength(4);
+});
+
+export const FallbackPaletteGallery = meta.story({
+  render: () => FallbackPaletteGalleryStory,
+});
+
+FallbackPaletteGallery.test(
+  'assigns matching palettes for tracks on the same album and neutral slate when metadata is blank',
+  async ({ canvas }) => {
+    const firstAlbumTrack = canvas.getByTestId('gallery-artwork-0');
+    const secondAlbumTrack = canvas.getByTestId('gallery-artwork-1');
+    const blankScrobble = canvas.getByTestId('gallery-artwork-7');
+
+    await expect(firstAlbumTrack.getAttribute('data-fallback-palette')).toBe(
+      secondAlbumTrack.getAttribute('data-fallback-palette'),
+    );
+    await expect(blankScrobble).toHaveAttribute('data-fallback-palette', 'slate');
+    await expect(canvas.getByText('KB')).toBeInTheDocument();
+    await expect(canvas.getByText('HO')).toBeInTheDocument();
+    await expect(canvas.getByText('??')).toBeInTheDocument();
+  },
+);
+
+export const TableThumbnailContext = meta.story({
+  render: () => TableThumbnailContextStory,
+});
+
+TableThumbnailContext.test(
+  'renders table-sized fallback thumbnails alongside real artwork',
+  async ({ canvas }) => {
+    await expect(await canvas.findByRole('img', { name: 'The Jones Girls' })).toBeInTheDocument();
+    await expect(canvas.getByText('TB')).toBeInTheDocument();
+    await expect(canvas.getByText('FE')).toBeInTheDocument();
+    await expect(canvas.getByText('KB')).toBeInTheDocument();
+    await expect(canvas.getByText('JI')).toBeInTheDocument();
   },
 );

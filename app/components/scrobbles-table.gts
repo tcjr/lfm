@@ -45,7 +45,7 @@ const ScrobblesTable: TOC<ScrobblesTableSignature> = <template>
         {{#each @scrobbles as |scrobble|}}
           <tr>
             <td>
-              <ScrobbleArtwork @scrobble={{scrobble}} class="size-10" />
+              <ScrobbleArtwork @scrobble={{scrobble}} class="size-10 rounded-md" />
             </td>
             <td>{{scrobble.track}}</td>
             <td>{{scrobble.artist}}</td>
