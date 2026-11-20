@@ -27,8 +27,6 @@ export interface ScrobblesGridSignature {
 interface OverlayModeConfig {
   /** Whether to render the bottom overlay container at all. */
   visible: boolean;
-  /** Offset/transition classes keeping fallback initials clear of the bottom scrim. */
-  fallback: string;
   /** Gradient stops and resting/hover visibility for the outer bottom scrim. */
   scrim: string;
   /** Collapsible grid wrapper classes for the secondary Album + Date drawer. */
@@ -46,8 +44,6 @@ const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> =
   // Track + Artist sit over the scrim at rest; Album + Date expand from 0fr -> 1fr on hover/focus.
   always: {
     visible: true,
-    fallback:
-      '[&_[data-artwork-fallback-content]]:pb-8 [&_[data-artwork-fallback-content]]:transition-transform [&_[data-artwork-fallback-content]]:duration-300 [&_[data-artwork-fallback-content]]:ease-out group-hover:[&_[data-artwork-fallback-content]]:scale-105 group-focus-visible:[&_[data-artwork-fallback-content]]:scale-105',
     scrim:
       'from-black/85 via-black/50 transition-colors duration-200 group-hover:from-black/95 group-hover:via-black/70 group-focus-visible:from-black/95 group-focus-visible:via-black/70',
     details:
@@ -56,16 +52,12 @@ const OVERLAY_MODE_CLASSES: Record<ScrobbleGridDisplayMode, OverlayModeConfig> =
   // Entire scrim (Track, Artist, Album, Date) starts hidden and slides up on hover/focus.
   hover: {
     visible: true,
-    fallback:
-      '[&_[data-artwork-fallback-content]]:transition-transform [&_[data-artwork-fallback-content]]:duration-200 group-hover:[&_[data-artwork-fallback-content]]:-translate-y-6 group-focus-visible:[&_[data-artwork-fallback-content]]:-translate-y-6',
     scrim:
       'translate-y-2 from-black/95 via-black/70 opacity-0 transition-all duration-200 ease-out group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100',
     details: '',
   },
   none: {
     visible: false,
-    fallback:
-      '[&_[data-artwork-fallback-content]]:transition-transform [&_[data-artwork-fallback-content]]:duration-300 [&_[data-artwork-fallback-content]]:ease-out group-hover:[&_[data-artwork-fallback-content]]:scale-105 group-focus-visible:[&_[data-artwork-fallback-content]]:scale-105',
     scrim: '',
     details: '',
   },
@@ -115,8 +107,7 @@ const ScrobblesGrid: TOC<ScrobblesGridSignature> = <template>
         >
           <ScrobbleArtwork
             @scrobble={{scrobble}}
-            class="size-full text-3xl [&_img]:transition-transform [&_img]:duration-300 [&_img]:ease-out group-hover:[&_img]:scale-105 group-focus-visible:[&_img]:scale-105
-              {{overlay.fallback}}"
+            class="size-full text-3xl [&_img]:transition-transform [&_img]:duration-300 [&_img]:ease-out group-hover:[&_img]:scale-105 group-focus-visible:[&_img]:scale-105"
           />
 
           {{#if (and scrobble.loved loved.visible)}}
